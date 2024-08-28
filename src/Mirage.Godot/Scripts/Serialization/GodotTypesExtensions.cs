@@ -6,23 +6,23 @@ namespace Mirage.Serialization
     {
         public static void WriteVector2(this NetworkWriter writer, Vector2 value)
         {
-            writer.WriteSingle(value.X);
-            writer.WriteSingle(value.Y);
+            writer.WriteSingle((float)value.X);
+            writer.WriteSingle((float)value.Y);
         }
 
         public static void WriteVector3(this NetworkWriter writer, Vector3 value)
         {
-            writer.WriteSingle(value.X);
-            writer.WriteSingle(value.Y);
-            writer.WriteSingle(value.Z);
+            writer.WriteSingle((float)value.X);
+            writer.WriteSingle((float)value.Y);
+            writer.WriteSingle((float)value.Z);
         }
 
         public static void WriteVector4(this NetworkWriter writer, Vector4 value)
         {
-            writer.WriteSingle(value.X);
-            writer.WriteSingle(value.Y);
-            writer.WriteSingle(value.Z);
-            writer.WriteSingle(value.W);
+            writer.WriteSingle((float)value.X);
+            writer.WriteSingle((float)value.Y);
+            writer.WriteSingle((float)value.Z);
+            writer.WriteSingle((float)value.W);
         }
 
         public static void WriteColor(this NetworkWriter writer, Color value)
@@ -36,7 +36,7 @@ namespace Mirage.Serialization
         public static void WritePlane(this NetworkWriter writer, Plane value)
         {
             writer.WriteVector3(value.Normal);
-            writer.WriteSingle(value.D);
+            writer.WriteSingle((float)value.D);
         }
 
 

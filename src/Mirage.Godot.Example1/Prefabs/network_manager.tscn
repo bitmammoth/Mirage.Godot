@@ -12,25 +12,25 @@
 
 [node name="NetworkManager" type="Node" node_paths=PackedStringArray("Server", "ServerObjectManager", "Client", "ClientObjectManager", "SocketFactory")]
 script = ExtResource("1_f8xxq")
-Server = NodePath("NetworkServer")
-ServerObjectManager = NodePath("ServerObjectManager")
+Server = NodePath("")
+ServerObjectManager = NodePath("")
 MaxConnections = 100
-Client = NodePath("NetworkClient")
-ClientObjectManager = NodePath("ClientObjectManager")
-SocketFactory = NodePath("UdpSocketFactory")
+Client = NodePath("")
+ClientObjectManager = NodePath("")
+SocketFactory = NodePath("")
 
 [node name="NetworkServer" type="Node" parent="." node_paths=PackedStringArray("SocketFactory", "ObjectManager")]
 script = ExtResource("2_0j8ur")
-SocketFactory = NodePath("../UdpSocketFactory")
-ObjectManager = NodePath("../ServerObjectManager")
+SocketFactory = NodePath("")
+ObjectManager = NodePath("")
 
 [node name="ServerObjectManager" type="Node" parent="."]
 script = ExtResource("3_eyqm1")
 
 [node name="NetworkClient" type="Node" parent="." node_paths=PackedStringArray("SocketFactory", "ObjectManager")]
 script = ExtResource("4_xs4x3")
-SocketFactory = NodePath("../UdpSocketFactory")
-ObjectManager = NodePath("../ClientObjectManager")
+SocketFactory = NodePath("")
+ObjectManager = NodePath("")
 
 [node name="ClientObjectManager" type="Node" parent="."]
 script = ExtResource("5_yef7t")

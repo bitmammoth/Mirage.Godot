@@ -43,14 +43,14 @@ namespace Example1
             {
                 if (this.IsServer())
                 {
-                    SendUpdate(currentPos, currentRot);
+                    SendUpdate(currentPos, (float)currentRot);
                 }
                 else
                 {
-                    SendUpdateRelayed(currentPos, currentRot);
+                    SendUpdateRelayed(currentPos, (float)currentRot);
                 }
                 _previousPos = currentPos;
-                _previousRot = currentRot;
+                _previousRot = (float)currentRot;
             }
         }
 

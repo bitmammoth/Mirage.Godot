@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://caun6vmr2vpnf"]
+[gd_scene load_steps=8 format=3 uid="uid://caun6vmr2vpnf"]
 
 [ext_resource type="PackedScene" uid="uid://miuh5bbud7ui" path="res://Prefabs/network_manager.tscn" id="1_0pplq"]
 [ext_resource type="Script" path="res://NetworkPositionSync/SyncPositionSystem.cs" id="2_g7qd7"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://bg0p7ddm0edm" path="res://Example2d/Prefabs/Player2d.tscn" id="4_6omh3"]
 [ext_resource type="PackedScene" uid="uid://cvi6cc3gurby7" path="res://Example2d/Prefabs/Cube2d.tscn" id="5_ylfgy"]
 [ext_resource type="Script" path="res://Mirage.Godot/NetworkHud.cs" id="6_7xq5x"]
+[ext_resource type="Script" path="res://Mirage.Godot/NetworkScene.cs" id="7_nfj5v"]
 
 [node name="World2d" type="Node2D"]
 
@@ -24,7 +25,25 @@ script = ExtResource("6_7xq5x")
 _manager = NodePath("../../../NetworkManager")
 _socketFactory = NodePath("../../../NetworkManager/UdpSocketFactory")
 
-[node name="NetworkManager" parent="." instance=ExtResource("1_0pplq")]
+[node name="NetworkManager" parent="." node_paths=PackedStringArray("Server", "ServerObjectManager", "Client", "ClientObjectManager", "SocketFactory", "NetworkScene") instance=ExtResource("1_0pplq")]
+Server = NodePath("NetworkServer")
+ServerObjectManager = NodePath("ServerObjectManager")
+Client = NodePath("NetworkClient")
+ClientObjectManager = NodePath("ClientObjectManager")
+SocketFactory = NodePath("UdpSocketFactory")
+EnableAllLogs = true
+NetworkScene = NodePath("NetworkScene")
+
+[node name="NetworkServer" parent="NetworkManager" index="0" node_paths=PackedStringArray("SocketFactory", "ObjectManager")]
+SocketFactory = NodePath("../UdpSocketFactory")
+ObjectManager = NodePath("../ServerObjectManager")
+
+[node name="ServerObjectManager" parent="NetworkManager" index="1"]
+OnlySpawnOnAuthenticated = true
+
+[node name="NetworkClient" parent="NetworkManager" index="2" node_paths=PackedStringArray("SocketFactory", "ObjectManager")]
+SocketFactory = NodePath("../UdpSocketFactory")
+ObjectManager = NodePath("../ClientObjectManager")
 
 [node name="SyncPositionSystem" type="Node" parent="NetworkManager" node_paths=PackedStringArray("Client", "Server")]
 script = ExtResource("2_g7qd7")
@@ -36,6 +55,10 @@ script = ExtResource("3_fm2wy")
 NetworkManager = NodePath("..")
 playerPrefab = ExtResource("4_6omh3")
 cubePrefab = ExtResource("5_ylfgy")
+
+[node name="NetworkScene" type="Node" parent="NetworkManager" node_paths=PackedStringArray("_sceneObjects")]
+script = ExtResource("7_nfj5v")
+_sceneObjects = []
 
 [node name="Camera2D" type="Camera2D" parent="."]
 

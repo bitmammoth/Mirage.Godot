@@ -43,14 +43,14 @@ namespace Mirage.Serialization
         }
         public Vector2Packer(Vector2 max, Vector2 precision)
         {
-            _xPacker = new FloatPacker(max.X, precision.X);
-            _yPacker = new FloatPacker(max.Y, precision.Y);
+            _xPacker = new FloatPacker((float)max.X, (float)precision.X);
+            _yPacker = new FloatPacker((float)max.Y, (float)precision.Y);
         }
 
         public void Pack(NetworkWriter writer, Vector2 value)
         {
-            _xPacker.Pack(writer, value.X);
-            _yPacker.Pack(writer, value.Y);
+            _xPacker.Pack(writer, (float)value.X);
+            _yPacker.Pack(writer, (float)value.Y);
         }
 
         public Vector2 Unpack(NetworkReader reader)

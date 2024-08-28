@@ -49,7 +49,7 @@ namespace Mirage
             stopButton.Pressed += StopPressed;
             AddChild(stopButton);
 
-            var pos = new Vector2(20, 20);
+            var pos = new Vector2(20.0f, 20.0f);
             VerticalLayout(serverButton, ref pos);
             VerticalLayout(clientButton, ref pos);
             VerticalLayout(hostButton, ref pos);

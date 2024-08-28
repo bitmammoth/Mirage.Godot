@@ -29,7 +29,7 @@ Documentation for the unity version of Mirage can be found at [https://miragenet
     - use `[-o|--output <OUTPUT_DIRECTORY>]` to make the path easier to find
 5) Add Build Targets to your main csproj
 ```xml
-<Project Sdk="Godot.NET.Sdk/4.1.1">
+<Project Sdk="Godot.NET.Sdk/4.3.0">
   ...
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
