@@ -11,7 +11,7 @@ namespace Mirage
         public override void _Ready()
         {
             base._Ready();
-            SetupLgging();
+            SetupLogging();
 
             if (EnableAllLogs)
             {
@@ -25,7 +25,7 @@ namespace Mirage
             LogFactory.GetLogger<NetworkManager>().filterLogType = LogType.Log;
         }
 
-        private static void SetupLgging()
+        private static void SetupLogging()
         {
             var file = $"./MirageLogs/mirage_{DateTime.Now:HH.mm.ss}_{System.Environment.ProcessId}.log";
             GD.Print($"Creating log file {Path.GetFullPath(file)}");

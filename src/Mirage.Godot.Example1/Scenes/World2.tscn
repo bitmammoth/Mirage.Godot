@@ -1,8 +1,9 @@
-[gd_scene load_steps=7 format=3 uid="uid://ch3xptccnn3ed"]
+[gd_scene load_steps=8 format=3 uid="uid://ch3xptccnn3ed"]
 
 [ext_resource type="PackedScene" uid="uid://miuh5bbud7ui" path="res://Prefabs/network_manager.tscn" id="1_kbcij"]
 [ext_resource type="Script" path="res://Mirage.Godot/Components/CharacterSpawner.cs" id="2_q1ghm"]
 [ext_resource type="PackedScene" uid="uid://d3g3tl662iye2" path="res://Prefabs/Player2d.tscn" id="3_lnfex"]
+[ext_resource type="Script" path="res://Mirage.Godot/NetworkScene.cs" id="5_0b43r"]
 [ext_resource type="Script" path="res://Mirage.Godot/NetworkHud.cs" id="5_rcbed"]
 
 [sub_resource type="Gradient" id="Gradient_xuwl1"]
@@ -24,8 +25,22 @@ grow_horizontal = 2
 grow_vertical = 2
 texture = SubResource("GradientTexture2D_oq0vj")
 
-[node name="NetworkManager" parent="." instance=ExtResource("1_kbcij")]
+[node name="NetworkManager" parent="." node_paths=PackedStringArray("Server", "ServerObjectManager", "Client", "ClientObjectManager", "SocketFactory", "NetworkScene") instance=ExtResource("1_kbcij")]
+Server = NodePath("NetworkServer")
+ServerObjectManager = NodePath("ServerObjectManager")
+Client = NodePath("NetworkClient")
+ClientObjectManager = NodePath("ClientObjectManager")
+SocketFactory = NodePath("UdpSocketFactory")
 EnableAllLogs = true
+NetworkScene = NodePath("NetworkScene")
+
+[node name="NetworkServer" parent="NetworkManager" index="0" node_paths=PackedStringArray("SocketFactory", "ObjectManager")]
+SocketFactory = NodePath("../UdpSocketFactory")
+ObjectManager = NodePath("../ServerObjectManager")
+
+[node name="NetworkClient" parent="NetworkManager" index="2" node_paths=PackedStringArray("SocketFactory", "ObjectManager")]
+SocketFactory = NodePath("../UdpSocketFactory")
+ObjectManager = NodePath("../ClientObjectManager")
 
 [node name="CharacterSpawner" type="Node" parent="NetworkManager" node_paths=PackedStringArray("Server", "ServerObjectManager")]
 script = ExtResource("2_q1ghm")
@@ -38,5 +53,9 @@ Player = ExtResource("3_lnfex")
 script = ExtResource("5_rcbed")
 _manager = NodePath("..")
 _socketFactory = NodePath("../UdpSocketFactory")
+
+[node name="NetworkScene" type="Node" parent="NetworkManager" node_paths=PackedStringArray("_sceneObjects")]
+script = ExtResource("5_0b43r")
+_sceneObjects = []
 
 [editable path="NetworkManager"]
