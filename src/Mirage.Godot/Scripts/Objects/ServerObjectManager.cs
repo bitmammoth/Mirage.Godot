@@ -434,7 +434,7 @@ namespace Mirage
                 // values in msg are nullable, so by default they are null
                 // only set those values if the identity's settings say to send them
                 if (settings.SendPosition) values.Position2d = root2d.Position;
-                if (settings.SendRotation) values.Rotation2d = (float)root2d.Rotation;
+                if (settings.SendRotation) values.Rotation2d = root2d.Rotation;
                 switch (settings.SendActive)
                 {
                     case SyncActiveOption.SyncWithServer:

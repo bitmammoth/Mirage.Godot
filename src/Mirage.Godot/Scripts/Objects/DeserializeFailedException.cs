@@ -10,7 +10,7 @@ namespace Mirage
         {
         }
 
-        protected DeserializeFailedException(SerializationInfo info, StreamingContext context) : base(info, context)
+        protected DeserializeFailedException(SerializationInfo info, StreamingContext context) : base()
         {
         }
     }

@@ -28,7 +28,7 @@ namespace Mirage.RemoteCalls
             messageHandler.RegisterHandler<RpcMessage>(OnRpcMessage);
             messageHandler.RegisterHandler<RpcWithReplyMessage>(OnRpcWithReplyMessage);
 
-            _objectLocator = (IObjectLocator)objectLocator;
+            _objectLocator = objectLocator;
             _invokeType = invokeType;
         }
 

@@ -74,7 +74,7 @@ namespace Example1
             direction.Y = 0;
             direction = direction.Normalized();
             var angle = direction.SignedAngleTo(Vector3.Forward, Vector3.Down);
-            return (float)angle;
+            return angle;
         }
 
         private static Vector3 GetInput()

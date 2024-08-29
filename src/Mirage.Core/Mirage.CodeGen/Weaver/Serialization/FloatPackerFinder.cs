@@ -74,12 +74,12 @@ namespace Mirage.Weaver.Serialization
                 if (settings.precision.HasValue)
                 {
                     worker.Append(worker.Create(OpCodes.Ldc_R4, settings.precision.Value));
-                    packerCtor = module.ImportReference(() => new FloatPacker(default, default(float)));
+                    packerCtor = module.ImportReference(() => new FloatPacker(default, default));
                 }
                 else if (settings.bitCount.HasValue)
                 {
                     worker.Append(worker.Create(OpCodes.Ldc_I4, settings.bitCount.Value));
-                    packerCtor = module.ImportReference(() => new FloatPacker(default, default(int)));
+                    packerCtor = module.ImportReference(() => new FloatPacker(default, default));
                 }
                 else
                 {

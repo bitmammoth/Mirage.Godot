@@ -177,24 +177,24 @@ namespace Mirage.Serialization
             switch (largestIndex)
             {
                 case 0:
-                    a = (float)quaternion.Y;
-                    b = (float)quaternion.Z;
-                    c = (float)quaternion.W;
+                    a = quaternion.Y;
+                    b = quaternion.Z;
+                    c = quaternion.W;
                     return;
                 case 1:
-                    a = (float)quaternion.X;
-                    b = (float)quaternion.Z;
-                    c = (float)quaternion.W;
+                    a = quaternion.X;
+                    b = quaternion.Z;
+                    c = quaternion.W;
                     return;
                 case 2:
-                    a = (float)quaternion.X;
-                    b = (float)quaternion.Y;
-                    c = (float)quaternion.W;
+                    a = quaternion.X;
+                    b = quaternion.Y;
+                    c = quaternion.W;
                     return;
                 case 3:
-                    a = (float)quaternion.X;
-                    b = (float)quaternion.Y;
-                    c = (float)quaternion.Z;
+                    a = quaternion.X;
+                    b = quaternion.Y;
+                    c = quaternion.Z;
                     return;
                 default:
                     ThrowIfOutOfRange();

@@ -626,7 +626,7 @@ namespace Mirage
 
             var components = NetworkNodeSyncVars;
             // store time as variable so we dont have to call property for each component
-            var now = (float)World.Time.LocalFrameTime;
+            var now = World.Time.LocalFrameTime;
 
             // serialize all components
             for (var i = 0; i < components.Length; ++i)

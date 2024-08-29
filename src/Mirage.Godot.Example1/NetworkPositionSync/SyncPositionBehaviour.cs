@@ -187,15 +187,9 @@ namespace JamesFrowen.PositionSync
         private float Rotation
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                return (float)target.Rotation;
-            }
+            get => target.Rotation;
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            set
-            {
-                target.Rotation = value;
-            }
+            set => target.Rotation = value;
         }
 
         public TransformState TransformState
