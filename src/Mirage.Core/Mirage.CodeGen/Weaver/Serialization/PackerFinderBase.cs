@@ -4,7 +4,7 @@ using System.Linq.Expressions;
 using Mirage.CodeGen;
 using Mono.Cecil;
 
-namespace Mirage.Weaver.Serialization
+namespace Mirage.CodeGen.Weaver.Serialization
 {
     internal abstract class PackerFinderBase<TAttribute, TSettings>
     {
@@ -19,9 +19,7 @@ namespace Mirage.Weaver.Serialization
             var unpackMethod = GetUnpackMethod(fieldType);
             // field might be created by another finder, so we can re-use it
             if (!TryGetPackerField(holder, fieldName, out var packerField))
-            {
                 packerField = CreatePackerField(module, fieldName, holder, settings);
-            }
 
             return new PackerSerializer(packerField, packMethod, unpackMethod, IsIntType);
         }
@@ -46,27 +44,19 @@ namespace Mirage.Weaver.Serialization
         public static void ValidatePrecision<TException>(float max, float precision, Func<string, TException> CreateException) where TException : WeaverException
         {
             if (precision < 0)
-            {
                 throw CreateException.Invoke($"Precsion must be positive, precision:{precision}");
-            }
 
             var expectedBitCount = Math.Floor(Math.Log(2 * max / (double)precision, 2)) + 1;
             // 30 should be large enough, if someone is trying to use more they might as well just send the whole float
             if (expectedBitCount > 30)
-            {
                 throw CreateException.Invoke($"Precsion is too small, precision:{precision}");
-            }
         }
         public static void ValidateBitCount<TException>(int bitCount, Func<string, TException> CreateException) where TException : WeaverException
         {
             if (bitCount > 30)
-            {
                 throw CreateException.Invoke($"BitCount must be between 1 and 30 (inclusive), bitCount:{bitCount}");
-            }
             if (bitCount < 1)
-            {
                 throw CreateException.Invoke($"BitCount must be between 1 and 30 (inclusive), bitCount:{bitCount}");
-            }
         }
     }
 }

@@ -2,20 +2,20 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using Mirage.CodeGen;
-using Mirage.Serialization;
-using Mirage.Weaver.Serialization;
+using Mirage.CodeGen.Mirage.CecilExtensions.Logging;
+using Mirage.Godot.Scripts.Serialization;
+using scripts = Mirage.Godot.Scripts;
+using Mirage.Weaver;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
 
-namespace Mirage.Weaver
+namespace Mirage.CodeGen.Weaver.Serialization
 {
-    public class Readers : SerializeFunctionBase
+    public class Readers(ModuleDefinition module, IWeaverLogger logger) : SerializeFunctionBase(module, logger)
     {
-        public Readers(ModuleDefinition module, IWeaverLogger logger) : base(module, logger) { }
-
         protected override string FunctionTypeLog => "read function";
-        protected override Expression<Action> ArrayExpression => () => Mirage.Serialization.CollectionExtensions.ReadArray<byte>(default);
+        protected override Expression<Action> ArrayExpression => () => scripts.Serialization.CollectionExtensions.ReadArray<byte>(default);
 
         protected override MethodReference GetGenericFunction()
         {
@@ -40,18 +40,11 @@ namespace Mirage.Weaver
             return readMethod.definition;
         }
 
-        private struct ReadMethod
+        private struct ReadMethod(MethodDefinition definition, ParameterDefinition readParameter, ILProcessor worker)
         {
-            public readonly MethodDefinition definition;
-            public readonly ParameterDefinition readParameter;
-            public readonly ILProcessor worker;
-
-            public ReadMethod(MethodDefinition definition, ParameterDefinition readParameter, ILProcessor worker)
-            {
-                this.definition = definition;
-                this.readParameter = readParameter;
-                this.worker = worker;
-            }
+            public readonly MethodDefinition definition = definition;
+            public readonly ParameterDefinition readParameter = readParameter;
+            public readonly ILProcessor worker = worker;
         }
         private ReadMethod GenerateReaderFunction(TypeReference variable)
         {
@@ -149,12 +142,7 @@ namespace Mirage.Weaver
             else
             {
                 // classes are created with their constructor
-                var ctor = Resolvers.ResolveDefaultPublicCtor(type);
-                if (ctor == null)
-                {
-                    throw new SerializeFunctionException($"{type.Name} can't be deserialized because it has no default constructor", type);
-                }
-
+                var ctor = Resolvers.ResolveDefaultPublicCtor(type) ?? throw new SerializeFunctionException($"{type.Name} can't be deserialized because it has no default constructor", type);
                 var ctorRef = worker.Body.Method.Module.ImportReference(ctor);
 
                 worker.Append(worker.Create(OpCodes.Newobj, ctorRef));

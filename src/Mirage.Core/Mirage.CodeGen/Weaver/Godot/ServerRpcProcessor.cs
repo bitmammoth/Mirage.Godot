@@ -1,24 +1,23 @@
 using System;
 using System.Linq;
 using System.Reflection;
-using Mirage.CodeGen;
-using Mirage.RemoteCalls;
-using Mirage.Serialization;
-using Mirage.Weaver.Serialization;
+using Mirage.CodeGen.Mirage.CecilExtensions.Logging;
+using Mirage.CodeGen.Weaver.Processors;
+using Mirage.CodeGen.Weaver.Serialization;
+using Mirage.Godot.Scripts;
+using Mirage.Godot.Scripts.Attributes;
+using Mirage.Godot.Scripts.RemoteCalls;
+using Mirage.Godot.Scripts.Serialization;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-namespace Mirage.Weaver
+namespace Mirage.CodeGen.Weaver.Godot
 {
     /// <summary>
     /// Processes [ServerRpc] methods in NetworkBehaviour
     /// </summary>
-    public class ServerRpcProcessor : RpcProcessor
+    public class ServerRpcProcessor(ModuleDefinition module, Readers readers, Writers writers, IWeaverLogger logger) : RpcProcessor(module, readers, writers, logger)
     {
-        public ServerRpcProcessor(ModuleDefinition module, Readers readers, Writers writers, IWeaverLogger logger) : base(module, readers, writers, logger)
-        {
-        }
-
         protected override Type AttributeType => typeof(ServerRpcAttribute);
 
         /// <summary>
@@ -49,8 +48,8 @@ namespace Mirage.Weaver
         /// </remarks>
         private MethodDefinition GenerateStub(MethodDefinition md, CustomAttribute serverRpcAttr, int rpcIndex, ValueSerializer[] paramSerializers, ReturnType returnType)
         {
-            var channel = serverRpcAttr.GetField(nameof(ServerRpcAttribute.channel), 0);
-            var requireAuthority = serverRpcAttr.GetField(nameof(ServerRpcAttribute.requireAuthority), true);
+            var channel = serverRpcAttr.GetField(nameof(ServerRpcAttribute.Channel), 0);
+            var requireAuthority = serverRpcAttr.GetField(nameof(ServerRpcAttribute.RequireAuthority), true);
 
             var cmd = SubstituteMethod(md);
 
@@ -85,7 +84,7 @@ namespace Mirage.Weaver
 
             worker.Append(worker.Create(OpCodes.Call, sendMethod));
 
-            NetworkWriterHelper.CallRelease(module, worker, writer);
+            NetworkWriterHelper.CallRelease(_module, worker, writer);
             worker.Append(worker.Create(OpCodes.Ret));
 
             return cmd;
@@ -145,7 +144,7 @@ namespace Mirage.Weaver
             var returnType = ValidateReturnType(md, RemoteCallType.ServerRpc, default);
 
             // default vaue true for requireAuthority, or someone could force call these on server
-            var requireAuthority = serverRpcAttr.GetField(nameof(ServerRpcAttribute.requireAuthority), true);
+            var requireAuthority = serverRpcAttr.GetField(nameof(ServerRpcAttribute.RequireAuthority), true);
 
             var paramSerializers = GetValueSerializers(md);
 
@@ -156,9 +155,9 @@ namespace Mirage.Weaver
             return new ServerRpcMethod
             {
                 Index = rpcIndex,
-                stub = md,
-                requireAuthority = requireAuthority,
-                skeleton = skeletonFunc,
+                Stub = md,
+                RequireAuthority = requireAuthority,
+                Skeleton = skeletonFunc,
                 ReturnType = returnType,
             };
         }

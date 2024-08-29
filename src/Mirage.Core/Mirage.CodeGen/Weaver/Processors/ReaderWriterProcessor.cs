@@ -4,12 +4,15 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using Mirage.CodeGen;
-using Mirage.Serialization;
+using Mirage.CodeGen.Mirage.CecilExtensions.Logging;
+using Mirage.CodeGen.Weaver.Serialization;
+using Mirage.Godot.Scripts;
+using Mirage.Godot.Scripts.Attributes;
+using Mirage.Godot.Scripts.Serialization;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-namespace Mirage.Weaver
+namespace Mirage.CodeGen.Weaver.Processors
 {
     public class ReaderWriterProcessor
     {
@@ -19,14 +22,14 @@ namespace Mirage.Weaver
             Console.Write($"[Weaver.ReaderWriterProcessor] {msg}\n");
         }
 
-        private readonly HashSet<TypeReference> messages = new HashSet<TypeReference>(new TypeReferenceComparer());
+        private readonly HashSet<TypeReference> _messages = new HashSet<TypeReference>(new TypeReferenceComparer());
 
-        private readonly IWeaverLogger logger;
-        private readonly ModuleDefinition module;
-        private readonly Readers readers;
-        private readonly Writers writers;
-        private readonly SerailizeExtensionHelper extensionHelper;
-        private readonly ModuleDefinition mirageModule;
+        private readonly IWeaverLogger _logger;
+        private readonly ModuleDefinition _module;
+        private readonly Readers _readers;
+        private readonly Writers _writers;
+        private readonly SerailizeExtensionHelper _extensionHelper;
+        private readonly ModuleDefinition _mirageModule;
 
         /// <summary>
         /// Mirage's main module used to find built in extension methods and messages
@@ -34,24 +37,22 @@ namespace Mirage.Weaver
 
         public ReaderWriterProcessor(ModuleDefinition module, Readers readers, Writers writers, IWeaverLogger logger)
         {
-            this.module = module;
-            this.readers = readers;
-            this.writers = writers;
-            this.logger = logger;
-            extensionHelper = new SerailizeExtensionHelper(module, readers, writers);
+            this._module = module;
+            this._readers = readers;
+            this._writers = writers;
+            this._logger = logger;
+            _extensionHelper = new SerailizeExtensionHelper(module, readers, writers);
 
             var typeInMirage = module.ImportReference(typeof(NetworkWriter));
 
             // have to resolve to get typedef, then get the module
-            var resolved = typeInMirage.Resolve();
-            if (resolved == null)
-                throw new Exception("Could not find Mirage main module");
-            mirageModule = resolved.Module;
+            var resolved = typeInMirage.Resolve() ?? throw new Exception("Could not find Mirage main module");
+            _mirageModule = resolved.Module;
         }
 
         public bool Process()
         {
-            messages.Clear();
+            _messages.Clear();
 
             var processed = FindAllExtensionMethods();
 
@@ -60,8 +61,8 @@ namespace Mirage.Weaver
             LoadBuiltinMessages();
 
             // store how many writers are found, we need to check if currentModule adds any
-            var writeCount = writers.Count;
-            var readCount = readers.Count;
+            var writeCount = _writers.Count;
+            var readCount = _readers.Count;
             ProcessModule();
 
             // we need to check if any methods are created from FindAllExtensionMethods or ProcessModule
@@ -76,12 +77,12 @@ namespace Mirage.Weaver
         {
             var references = new List<AssemblyDefinition>();
             // load all references
-            foreach (var reference in module.AssemblyReferences)
+            foreach (var reference in _module.AssemblyReferences)
             {
-                var assembly = module.AssemblyResolver.Resolve(reference);
+                var assembly = _module.AssemblyResolver.Resolve(reference);
                 if (assembly == null)
                 {
-                    logger.Warning($"Failed to resolve assembly reference: {reference}");
+                    _logger.Warning($"Failed to resolve assembly reference: {reference}");
                     continue;
                 }
 
@@ -93,13 +94,13 @@ namespace Mirage.Weaver
 
             var tracker = new CountTracker(this);
 
-            FindExtensionMethods(module.Assembly);
+            FindExtensionMethods(_module.Assembly);
             // have any been added in the dll we are weaving?
             var processed = tracker.AnyNew();
             tracker.LogCount("Main Module");
 
             // we have to find extensions in mirage manually, it seems that for some versions of unity Mirage.dll isn't referenced by the
-            FindExtensionMethods(mirageModule);
+            FindExtensionMethods(_mirageModule);
             tracker.LogCount("Mirage");
 
             // process all references
@@ -121,20 +122,20 @@ namespace Mirage.Weaver
             public CountTracker(ReaderWriterProcessor processor) : this()
             {
                 _processor = processor;
-                ReadCount = processor.readers.Count;
-                WriteCount = processor.writers.Count;
+                ReadCount = processor._readers.Count;
+                WriteCount = processor._writers.Count;
             }
 
-            public bool AnyNew()
+            public readonly bool AnyNew()
             {
-                return _processor.writers.Count != WriteCount || _processor.readers.Count != ReadCount;
+                return _processor._writers.Count != WriteCount || _processor._readers.Count != ReadCount;
             }
             public void LogCount(string label)
             {
-                Log($"Functions in {label}: {_processor.writers.Count - WriteCount} writers, {_processor.readers.Count - ReadCount} readers");
+                Log($"Functions in {label}: {_processor._writers.Count - WriteCount} writers, {_processor._readers.Count - ReadCount} readers");
                 // store values again so we can log new count
-                WriteCount = _processor.writers.Count;
-                ReadCount = _processor.readers.Count;
+                WriteCount = _processor._writers.Count;
+                ReadCount = _processor._readers.Count;
             }
         }
 
@@ -144,7 +145,7 @@ namespace Mirage.Weaver
             foreach (var module in assembly.Modules)
             {
                 // skip mirage for here, we process it manually
-                if (module == mirageModule)
+                if (module == _mirageModule)
                     continue;
 
                 FindExtensionMethods(module);
@@ -156,7 +157,7 @@ namespace Mirage.Weaver
             foreach (var type in module.Types)
             {
                 var resolved = type.Resolve();
-                extensionHelper.RegisterExtensionMethodsInType(resolved);
+                _extensionHelper.RegisterExtensionMethodsInType(resolved);
             }
         }
 
@@ -165,23 +166,23 @@ namespace Mirage.Weaver
         /// </summary>
         private void LoadBuiltinMessages()
         {
-            var types = mirageModule.GetTypes().Where(t => t.GetCustomAttribute<NetworkMessageAttribute>() != null);
+            var types = _mirageModule.GetTypes().Where(t => t.GetCustomAttribute<NetworkMessageAttribute>() != null);
             foreach (var type in types)
             {
                 Log($"Loading built-in message: {type.FullName}");
 
-                var typeReference = module.ImportReference(type);
+                var typeReference = _module.ImportReference(type);
                 // these can use the throw version, because if they break Mirage/weaver is broken
-                writers.GetFunction_Throws(typeReference);
-                readers.GetFunction_Throws(typeReference);
-                messages.Add(typeReference);
+                _writers.GetFunction_Throws(typeReference);
+                _readers.GetFunction_Throws(typeReference);
+                _messages.Add(typeReference);
             }
         }
 
         private void ProcessModule()
         {
             // create copy incase we modify types
-            var types = new List<TypeDefinition>(module.Types);
+            var types = new List<TypeDefinition>(_module.Types);
 
             // find NetworkMessages
             foreach (var klass in types)
@@ -190,7 +191,7 @@ namespace Mirage.Weaver
             // Generate readers and writers
             // find all the Send<> and Register<> calls and generate
             // readers and writers for them.
-            CodePass.ForEachInstruction(module, GenerateReadersWriters);
+            CodePass.ForEachInstruction(_module, GenerateReadersWriters);
         }
 
         private void CheckForNetworkMessage(TypeDefinition klass)
@@ -198,9 +199,9 @@ namespace Mirage.Weaver
             if (klass.HasCustomAttribute<NetworkMessageAttribute>())
             {
                 Log($"Loading message: {klass.FullName}");
-                readers.TryGetFunction(klass, null);
-                writers.TryGetFunction(klass, null);
-                messages.Add(klass);
+                _readers.TryGetFunction(klass, null);
+                _writers.TryGetFunction(klass, null);
+                _messages.Add(klass);
             }
 
             foreach (var nestedClass in klass.NestedTypes)
@@ -212,15 +213,11 @@ namespace Mirage.Weaver
         private Instruction GenerateReadersWriters(MethodDefinition _, Instruction instruction, SequencePoint sequencePoint)
         {
             if (instruction.OpCode == OpCodes.Ldsfld)
-            {
                 GenerateReadersWriters((FieldReference)instruction.Operand, sequencePoint);
-            }
 
             // We are looking for calls to some specific types
             if (instruction.OpCode == OpCodes.Call || instruction.OpCode == OpCodes.Callvirt)
-            {
                 GenerateReadersWriters((MethodReference)instruction.Operand, sequencePoint);
-            }
 
             return instruction;
         }
@@ -229,7 +226,7 @@ namespace Mirage.Weaver
         {
             var type = field.DeclaringType;
 
-            if (type.Is(typeof(Writer<>)) || (type.Is(typeof(Reader<>)) && type.IsGenericInstance))
+            if (type.Is(typeof(Writer<>)) || type.Is(typeof(Reader<>)) && type.IsGenericInstance)
             {
                 var typeGenericInstance = (GenericInstanceType)type;
 
@@ -260,7 +257,7 @@ namespace Mirage.Weaver
 
                 GenerateReadersWriters(parameterType, sequencePoint);
                 if (isMessage)
-                    messages.Add(parameterType);
+                    _messages.Add(parameterType);
             }
         }
 
@@ -275,15 +272,15 @@ namespace Mirage.Weaver
                     var constructor = typeDefinition.GetMethod(".ctor");
 
                     var hasAccess = constructor.IsPublic
-                        || (constructor.IsAssembly && typeDefinition.Module == module);
+                        || constructor.IsAssembly && typeDefinition.Module == _module;
 
                     if (!hasAccess)
                         return;
                 }
 
                 Log($"Generating Serialize for type used in generic: {parameterType.FullName}");
-                writers.TryGetFunction(parameterType, sequencePoint);
-                readers.TryGetFunction(parameterType, sequencePoint);
+                _writers.TryGetFunction(parameterType, sequencePoint);
+                _readers.TryGetFunction(parameterType, sequencePoint);
             }
         }
 
@@ -335,14 +332,14 @@ namespace Mirage.Weaver
         /// <param name="currentAssembly"></param>
         public void InitializeReaderAndWriters()
         {
-            var rwInitializer = module.GeneratedClass().AddMethod(
+            var rwInitializer = _module.GeneratedClass().AddMethod(
                 GeneratedCode.INIT_METHOD,
                 Mono.Cecil.MethodAttributes.Public | Mono.Cecil.MethodAttributes.Static);
 
             var worker = rwInitializer.Body.GetILProcessor();
 
-            writers.InitializeWriters(worker);
-            readers.InitializeReaders(worker);
+            _writers.InitializeWriters(worker);
+            _readers.InitializeReaders(worker);
 
             RegisterMessages(worker);
 
@@ -352,12 +349,12 @@ namespace Mirage.Weaver
         private void RegisterMessages(ILProcessor worker)
         {
             var method = typeof(MessagePacker).GetMethod(nameof(MessagePacker.RegisterMessage));
-            var registerMethod = module.ImportReference(method);
+            var registerMethod = _module.ImportReference(method);
 
-            foreach (var message in messages)
+            foreach (var message in _messages)
             {
                 var genericMethodCall = new GenericInstanceMethod(registerMethod);
-                genericMethodCall.GenericArguments.Add(module.ImportReference(message));
+                genericMethodCall.GenericArguments.Add(_module.ImportReference(message));
                 worker.Append(worker.Create(OpCodes.Call, genericMethodCall));
             }
         }
@@ -366,18 +363,11 @@ namespace Mirage.Weaver
     /// <summary>
     /// Helps get Extension methods using either reflection or cecil
     /// </summary>
-    public class SerailizeExtensionHelper
+    public class SerailizeExtensionHelper(ModuleDefinition module, Readers readers, Writers writers)
     {
-        private readonly ModuleDefinition module;
-        private readonly Readers readers;
-        private readonly Writers writers;
-
-        public SerailizeExtensionHelper(ModuleDefinition module, Readers readers, Writers writers)
-        {
-            this.module = module;
-            this.readers = readers;
-            this.writers = writers;
-        }
+        private readonly ModuleDefinition module = module;
+        private readonly Readers readers = readers;
+        private readonly Writers writers = writers;
 
         // todo can this be removed, doesn't seem to be used any more
         public void RegisterExtensionMethodsInType(Type type)
@@ -497,7 +487,7 @@ namespace Mirage.Weaver
 
             return true;
         }
-        private bool IsWriterMethod(MethodDefinition method)
+        private static bool IsWriterMethod(MethodDefinition method)
         {
             if (method.Parameters.Count != 2)
                 return false;
@@ -524,7 +514,7 @@ namespace Mirage.Weaver
 
             return true;
         }
-        private bool IsReaderMethod(MethodDefinition method)
+        private static bool IsReaderMethod(MethodDefinition method)
         {
             if (method.Parameters.Count != 1)
                 return false;
@@ -545,7 +535,7 @@ namespace Mirage.Weaver
             var dataType = method.GetParameters()[1].ParameterType;
             return module.ImportReference(dataType);
         }
-        private TypeReference GetWriterDataType(MethodDefinition method)
+        private static TypeReference GetWriterDataType(MethodDefinition method)
         {
             ReaderWriterProcessor.Log($"Found writer extension methods: {method.Name}");
 
@@ -558,7 +548,7 @@ namespace Mirage.Weaver
             ReaderWriterProcessor.Log($"Found reader extension methods: {method.Name}");
             return module.ImportReference(method.ReturnType);
         }
-        private TypeReference GetReaderDataType(MethodDefinition method)
+        private static TypeReference GetReaderDataType(MethodDefinition method)
         {
             ReaderWriterProcessor.Log($"Found reader extension methods: {method.Name}");
             return method.ReturnType;

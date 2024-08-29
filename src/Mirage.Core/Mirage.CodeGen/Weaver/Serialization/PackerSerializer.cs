@@ -3,31 +3,20 @@ using Mirage.CodeGen;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-namespace Mirage.Weaver.Serialization
+namespace Mirage.CodeGen.Weaver.Serialization
 {
-    internal class PackerSerializer : ValueSerializer
+    internal class PackerSerializer(FieldDefinition packerField, LambdaExpression packMethod, LambdaExpression unpackMethod, bool isIntType) : ValueSerializer
     {
-        private readonly FieldReference packerField;
-        private readonly LambdaExpression packMethod;
-        private readonly LambdaExpression unpackMethod;
+        private readonly FieldReference packerField = packerField.MakeHostGenericIfNeeded();
+        private readonly LambdaExpression packMethod = packMethod;
+        private readonly LambdaExpression unpackMethod = unpackMethod;
 
-        public override bool IsIntType { get; }
-
-        public PackerSerializer(FieldDefinition packerField, LambdaExpression packMethod, LambdaExpression unpackMethod, bool isIntType)
-        {
-            this.packerField = packerField.MakeHostGenericIfNeeded();
-
-            this.packMethod = packMethod;
-            this.unpackMethod = unpackMethod;
-
-            IsIntType = isIntType;
-        }
+        public override bool IsIntType { get; } = isIntType;
 
         public override void AppendWriteField(ModuleDefinition module, ILProcessor worker, ParameterDefinition writerParameter, ParameterDefinition typeParameter, FieldReference fieldReference)
         {
             // if PackerField is null it means there was an error earlier, so we dont need to do anything here
-            if (packerField == null) { return; }
-
+            if (packerField == null) return;
             // Generates: packer.pack(writer, field)
             worker.Append(worker.Create(OpCodes.Ldsfld, packerField));
             worker.Append(LoadParamOrArg0(worker, writerParameter));
@@ -47,8 +36,7 @@ namespace Mirage.Weaver.Serialization
         public override void AppendRead(ModuleDefinition module, ILProcessor worker, ParameterDefinition readerParameter, TypeReference fieldType)
         {
             // if PackerField is null it means there was an error earlier, so we dont need to do anything here
-            if (packerField == null) { return; }
-
+            if (packerField == null) return;
             // Generates: ... = packer.unpack(reader)
             worker.Append(worker.Create(OpCodes.Ldsfld, packerField));
             worker.Append(worker.Create(OpCodes.Ldarg, readerParameter));

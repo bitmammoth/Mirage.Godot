@@ -1,11 +1,13 @@
 using System;
 using System.Linq.Expressions;
 using Mirage.CodeGen;
-using Mirage.Serialization;
+using Mirage.Godot.Scripts.Serialization;
+using Mirage.Godot.Scripts.Serialization.Packers;
+using Mirage.Weaver.Serialization;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-namespace Mirage.Weaver.Serialization
+namespace Mirage.CodeGen.Weaver.Serialization
 {
     internal class FloatPackFinder : PackerFinderBase<FloatPackAttribute, FloatPackFinder.FloatPackSettings>
     {
@@ -21,16 +23,12 @@ namespace Mirage.Weaver.Serialization
         protected override FloatPackSettings GetSettings(TypeReference fieldType, CustomAttribute attribute)
         {
             if (!fieldType.Is<float>())
-            {
                 throw new FloatPackException($"{fieldType} is not a supported type for [FloatPack]");
-            }
 
             var settings = new FloatPackSettings();
             settings.max = (float)attribute.ConstructorArguments[0].Value;
             if (settings.max <= 0)
-            {
                 throw new FloatPackException($"Max must be above 0, max:{settings.max}");
-            }
 
             var arg1 = attribute.ConstructorArguments[1];
             if (arg1.Type.Is<float>())
@@ -51,13 +49,13 @@ namespace Mirage.Weaver.Serialization
 
         protected override LambdaExpression GetPackMethod(TypeReference fieldType)
         {
-            Expression<Action<FloatPacker>> packMethod = (FloatPacker p) => p.Pack(default, default);
+            Expression<Action<FloatPacker>> packMethod = (p) => p.Pack(default, default);
             return packMethod;
         }
 
         protected override LambdaExpression GetUnpackMethod(TypeReference fieldType)
         {
-            Expression<Action<FloatPacker>> unpackMethod = (FloatPacker p) => p.Unpack(default(NetworkReader));
+            Expression<Action<FloatPacker>> unpackMethod = (p) => p.Unpack(default(NetworkReader));
             return unpackMethod;
         }
 

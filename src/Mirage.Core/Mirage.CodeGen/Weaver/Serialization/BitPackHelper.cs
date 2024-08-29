@@ -1,10 +1,11 @@
 using System;
 using Mirage.CodeGen;
+using Mirage.Weaver.Serialization;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
 
-namespace Mirage.Weaver.Serialization
+namespace Mirage.CodeGen.Weaver.Serialization
 {
     public static class BitPackHelper
     {
@@ -29,7 +30,10 @@ namespace Mirage.Weaver.Serialization
             if (type.Is<ushort>()) return ushort.MaxValue;
             if (type.Is<short>()) return short.MaxValue;
             if (type.Is<int>()
-             || type.Is<uint>()) return int.MaxValue;
+             || type.Is<uint>())
+            {
+                return int.MaxValue;
+            }
 
             if (type.Resolve().IsEnum)
             {

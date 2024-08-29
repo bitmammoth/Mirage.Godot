@@ -1,5 +1,10 @@
 using System.Collections.Generic;
 using Mirage.CodeGen;
+using Mirage.CodeGen.Mirage.CecilExtensions.Logging;
+using Mirage.CodeGen.Weaver;
+using Mirage.CodeGen.Weaver.Godot;
+using Mirage.Godot.Scripts;
+using Mirage.Godot.Scripts.Attributes;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
@@ -11,25 +16,14 @@ namespace Mirage.Weaver
     /// Injects server/client active checks for [Server/Client] attributes
     /// </para>
     /// </summary>
-    internal class AttributeProcessor
+    internal class AttributeProcessor(ModuleDefinition module, IWeaverLogger logger)
     {
-        private readonly IWeaverLogger logger;
-        private readonly MethodReference IsServer;
-        private readonly MethodReference IsClient;
-        private readonly MethodReference HasAuthority;
-        private readonly MethodReference IsLocalPlayer;
-        private bool modified = false;
-
-        public AttributeProcessor(ModuleDefinition module, IWeaverLogger logger)
-        {
-            this.logger = logger;
-
-            // Cache these so that we dont import them for each site we process
-            IsServer = module.ImportReference(() => NetworkNodeExtensions.IsServer(default));
-            IsClient = module.ImportReference(() => NetworkNodeExtensions.IsClient(default));
-            HasAuthority = module.ImportReference(() => NetworkNodeExtensions.HasAuthority(default));
-            IsLocalPlayer = module.ImportReference(() => NetworkNodeExtensions.IsMainCharacter(default));
-        }
+        private readonly IWeaverLogger _logger = logger;
+        private readonly MethodReference _isServer = module.ImportReference(() => NetworkNodeExtensions.IsServer(default));
+        private readonly MethodReference _isClient = module.ImportReference(() => NetworkNodeExtensions.IsClient(default));
+        private readonly MethodReference _hasAuthority = module.ImportReference(() => NetworkNodeExtensions.HasAuthority(default));
+        private readonly MethodReference _isLocalPlayer = module.ImportReference(() => NetworkNodeExtensions.IsMainCharacter(default));
+        private bool _modified = false;
 
         public bool ProcessTypes(IReadOnlyList<FoundType> foundTypes)
         {
@@ -38,7 +32,7 @@ namespace Mirage.Weaver
                 ProcessType(foundType);
             }
 
-            return modified;
+            return _modified;
         }
 
         private void ProcessType(FoundType foundType)
@@ -65,12 +59,12 @@ namespace Mirage.Weaver
         private void ProcessFields(FieldDefinition fd, FoundType foundType)
         {
             if (fd.HasCustomAttribute<SyncVarAttribute>())
-                logger.Error($"SyncVar {fd.Name} must be inside a NetworkBehaviour. {foundType.TypeDefinition.Name} is not a NetworkBehaviour", fd);
+                _logger.Error($"SyncVar {fd.Name} must be inside a NetworkBehaviour. {foundType.TypeDefinition.Name} is not a NetworkBehaviour", fd);
 
             // only check SyncObjects inside Monobehaviours
             if (foundType.IsMonoBehaviour && SyncObjectProcessor.ImplementsSyncObject(fd.FieldType))
             {
-                logger.Error($"{fd.Name} is a SyncObject and can not be used inside Monobehaviour. {foundType.TypeDefinition.Name} is not a NetworkBehaviour", fd);
+                _logger.Error($"{fd.Name} is a SyncObject and can not be used inside Monobehaviour. {foundType.TypeDefinition.Name} is not a NetworkBehaviour", fd);
             }
         }
 
@@ -95,10 +89,10 @@ namespace Mirage.Weaver
 
         private void ProcessMethodAttributes(MethodDefinition md, FoundType foundType)
         {
-            InjectGuard<ServerAttribute>(md, foundType, IsServer, "[Server] function '{0}' called when server not active");
-            InjectGuard<ClientAttribute>(md, foundType, IsClient, "[Client] function '{0}' called when client not active");
-            InjectGuard<HasAuthorityAttribute>(md, foundType, HasAuthority, "[Has Authority] function '{0}' called on player without authority");
-            InjectGuard<MainCharacterAttribute>(md, foundType, IsLocalPlayer, "[Local Player] function '{0}' called on nonlocal player");
+            InjectGuard<ServerAttribute>(md, foundType, _isServer, "[Server] function '{0}' called when server not active");
+            InjectGuard<ClientAttribute>(md, foundType, _isClient, "[Client] function '{0}' called when client not active");
+            InjectGuard<HasAuthorityAttribute>(md, foundType, _hasAuthority, "[Has Authority] function '{0}' called on player without authority");
+            InjectGuard<MainCharacterAttribute>(md, foundType, _isLocalPlayer, "[Local Player] function '{0}' called on nonlocal player");
             InjectNetworkMethodGuard(md, foundType);
             CheckAttribute<ServerRpcAttribute>(md, foundType);
             CheckAttribute<ClientRpcAttribute>(md, foundType);
@@ -112,7 +106,7 @@ namespace Mirage.Weaver
 
             if (!foundType.IsNetworkBehaviour)
             {
-                logger.Error($"{attribute.AttributeType.Name} method {md.Name} must be declared in a NetworkBehaviour", md);
+                _logger.Error($"{attribute.AttributeType.Name} method {md.Name} must be declared in a NetworkBehaviour", md);
             }
         }
 
@@ -124,24 +118,24 @@ namespace Mirage.Weaver
 
             if (md.IsAbstract)
             {
-                logger.Error($"{typeof(TAttribute)} can't be applied to abstract method. Apply to override methods instead.", md);
+                _logger.Error($"{typeof(TAttribute)} can't be applied to abstract method. Apply to override methods instead.", md);
                 return false;
             }
 
             if (!foundType.IsNetworkBehaviour)
             {
-                logger.Error($"{attribute.AttributeType.Name} method {md.Name} must be declared in a NetworkBehaviour", md);
+                _logger.Error($"{attribute.AttributeType.Name} method {md.Name} must be declared in a NetworkBehaviour", md);
                 return false;
             }
 
             if (md.Name == "Awake" && !md.HasParameters)
             {
-                logger.Error($"{attribute.AttributeType.Name} will not work on the Awake method.", md);
+                _logger.Error($"{attribute.AttributeType.Name} will not work on the Awake method.", md);
                 return false;
             }
 
             // dont need to set modified for errors, so we set it here when we start doing ILProcessing
-            modified = true;
+            _modified = true;
             return true;
         }
 
@@ -191,26 +185,26 @@ namespace Mirage.Weaver
             if (requiredFlagsValue.HasFlag(NetworkFlags.Server))
             {
                 worker.InsertBefore(top, worker.Create(OpCodes.Ldarg_0));
-                worker.InsertBefore(top, worker.Create(OpCodes.Call, IsServer));
+                worker.InsertBefore(top, worker.Create(OpCodes.Call, _isServer));
                 worker.InsertBefore(top, worker.Create(OpCodes.Brtrue, top));
             }
             if (requiredFlagsValue.HasFlag(NetworkFlags.Client))
             {
                 worker.InsertBefore(top, worker.Create(OpCodes.Ldarg_0));
-                worker.InsertBefore(top, worker.Create(OpCodes.Call, IsClient));
+                worker.InsertBefore(top, worker.Create(OpCodes.Call, _isClient));
                 worker.InsertBefore(top, worker.Create(OpCodes.Brtrue, top));
             }
             if (requiredFlagsValue.HasFlag(NetworkFlags.HasAuthority))
             {
                 worker.InsertBefore(top, worker.Create(OpCodes.Ldarg_0));
-                worker.InsertBefore(top, worker.Create(OpCodes.Call, HasAuthority));
+                worker.InsertBefore(top, worker.Create(OpCodes.Call, _hasAuthority));
                 worker.InsertBefore(top, worker.Create(OpCodes.Brtrue, top));
             }
             if (requiredFlagsValue.HasFlag(NetworkFlags.LocalOwner))
             {
                 // Check if the object is the local player's
                 worker.InsertBefore(top, worker.Create(OpCodes.Ldarg_0));
-                worker.InsertBefore(top, worker.Create(OpCodes.Call, IsLocalPlayer));
+                worker.InsertBefore(top, worker.Create(OpCodes.Call, _isLocalPlayer));
                 worker.InsertBefore(top, worker.Create(OpCodes.Brtrue, top));
             }
 
@@ -218,9 +212,9 @@ namespace Mirage.Weaver
             {
                 // Check if neither Server nor Clients are active
                 worker.InsertBefore(top, worker.Create(OpCodes.Ldarg_0));
-                worker.InsertBefore(top, worker.Create(OpCodes.Call, IsServer));
+                worker.InsertBefore(top, worker.Create(OpCodes.Call, _isServer));
                 worker.InsertBefore(top, worker.Create(OpCodes.Ldarg_0));
-                worker.InsertBefore(top, worker.Create(OpCodes.Call, IsClient));
+                worker.InsertBefore(top, worker.Create(OpCodes.Call, _isClient));
                 worker.InsertBefore(top, worker.Create(OpCodes.Or));
                 worker.InsertBefore(top, worker.Create(OpCodes.Brfalse, top));
             }
@@ -254,7 +248,7 @@ namespace Mirage.Weaver
                 if (!param.IsOut)
                     continue;
 
-                var byRefType = (Mono.Cecil.ByReferenceType)param.ParameterType;
+                var byRefType = (ByReferenceType)param.ParameterType;
 
                 // need to use ElementType not GetElementType()
                 //   GetElementType() will get the element type of the inner elementType

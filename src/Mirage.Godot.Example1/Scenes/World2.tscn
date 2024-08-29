@@ -1,10 +1,10 @@
 [gd_scene load_steps=8 format=3 uid="uid://ch3xptccnn3ed"]
 
 [ext_resource type="PackedScene" uid="uid://miuh5bbud7ui" path="res://Prefabs/network_manager.tscn" id="1_kbcij"]
-[ext_resource type="Script" path="res://Mirage.Godot/Components/CharacterSpawner.cs" id="2_q1ghm"]
+[ext_resource type="Script" path="res://Mirage.Godot/Scripts/Components/CharacterSpawner.cs" id="2_q1ghm"]
 [ext_resource type="PackedScene" uid="uid://d3g3tl662iye2" path="res://Prefabs/Player2d.tscn" id="3_lnfex"]
-[ext_resource type="Script" path="res://Mirage.Godot/NetworkScene.cs" id="5_0b43r"]
-[ext_resource type="Script" path="res://Mirage.Godot/NetworkHud.cs" id="5_rcbed"]
+[ext_resource type="Script" path="res://Mirage.Godot/Scripts/NetworkScene.cs" id="5_0b43r"]
+[ext_resource type="Script" path="res://Mirage.Godot/Scripts/NetworkHud.cs" id="5_rcbed"]
 
 [sub_resource type="Gradient" id="Gradient_xuwl1"]
 offsets = PackedFloat32Array(0, 0.378453, 0.522099, 1)

@@ -2,7 +2,7 @@ using System;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-namespace Mirage.Weaver.Serialization
+namespace Mirage.CodeGen.Weaver.Serialization
 {
     internal class FunctionSerializer : ValueSerializer
     {

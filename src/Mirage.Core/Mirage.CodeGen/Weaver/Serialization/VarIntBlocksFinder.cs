@@ -1,9 +1,10 @@
 using Mirage.CodeGen;
-using Mirage.Serialization;
+using Mirage.Godot.Scripts.Serialization;
+using Mirage.Weaver.Serialization;
 using Mono.Cecil;
 using Mono.Cecil.Rocks;
 
-namespace Mirage.Weaver.Serialization
+namespace Mirage.CodeGen.Weaver.Serialization
 {
     internal static class VarIntBlocksFinder
     {
@@ -42,7 +43,9 @@ namespace Mirage.Weaver.Serialization
              || type.Is<uint>()
              || type.Is<long>()
              || type.Is<ulong>())
+            {
                 return;
+            }
 
             if (type.Resolve().IsEnum)
             {

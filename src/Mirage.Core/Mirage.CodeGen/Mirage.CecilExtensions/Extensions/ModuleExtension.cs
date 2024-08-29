@@ -1,6 +1,7 @@
 using System;
 using System.Linq.Expressions;
 using System.Reflection;
+using Mirage.Godot.Scripts;
 using Mono.Cecil;
 using TypeAttributes = Mono.Cecil.TypeAttributes;
 

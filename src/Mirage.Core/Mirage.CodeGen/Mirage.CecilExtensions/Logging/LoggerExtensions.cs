@@ -2,7 +2,7 @@ using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-namespace Mirage.CodeGen
+namespace Mirage.CodeGen.Mirage.CecilExtensions.Logging
 {
     public static class LoggerExtensions
     {

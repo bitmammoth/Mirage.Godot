@@ -2,7 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Mirage.Weaver;
+using Mirage.CodeGen.Mirage.CecilExtensions.Logging;
+using Mirage.CodeGen.Mirage.CecilExtensions.UnityCodeGen;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
@@ -40,7 +41,7 @@ namespace Mirage.CodeGen
             this.logger = logger ?? new WeaverLogger(false);
             timer = new WeaverDiagnosticsTimer(GetType().Name)
             {
-                writeToFile = true,
+                WriteToFile = true,
             };
         }
 
@@ -137,7 +138,7 @@ namespace Mirage.CodeGen
                 DiagnosticType = DiagnosticMessage.Type.Error,
                 MessageData = $"Weaver {Name} failed on {_assemblyDefinition?.Name} because of Exception: {e}",
             };
-            return new List<DiagnosticMessage> { message };
+            return [message];
         }
 
         private static AssemblyDefinition ReadAssembly(CompiledAssembly compiledAssembly, string[] hintDirectories)

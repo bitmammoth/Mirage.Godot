@@ -1,6 +1,6 @@
 [gd_scene load_steps=5 format=3 uid="uid://d3g3tl662iye2"]
 
-[ext_resource type="Script" path="res://Mirage.Godot/Objects/NetworkIdentity.cs" id="1_od2vu"]
+[ext_resource type="Script" path="res://Mirage.Godot/Scripts/Objects/NetworkIdentity.cs" id="1_od2vu"]
 [ext_resource type="Script" path="res://Scripts/NetworkTransform2D.cs" id="2_ctluj"]
 
 [sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_khk7h"]

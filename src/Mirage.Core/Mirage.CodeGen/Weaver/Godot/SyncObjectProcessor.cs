@@ -1,25 +1,21 @@
 using System.Collections.Generic;
 using Mirage.CodeGen;
-using Mirage.Collections;
+using Mirage.CodeGen.Mirage.CecilExtensions.Logging;
+using Mirage.CodeGen.Weaver.Serialization;
+using Mirage.Godot.Scripts;
+using Mirage.Godot.Scripts.Syncing;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-namespace Mirage.Weaver
+namespace Mirage.CodeGen.Weaver.Godot
 {
-    public class SyncObjectProcessor
+    public class SyncObjectProcessor(Readers readers, Writers writers, IWeaverLogger logger)
     {
-        private readonly List<FieldDefinition> syncObjects = new List<FieldDefinition>();
+        private readonly List<FieldDefinition> _syncObjects = [];
 
-        private readonly Readers readers;
-        private readonly Writers writers;
-        private readonly IWeaverLogger logger;
-
-        public SyncObjectProcessor(Readers readers, Writers writers, IWeaverLogger logger)
-        {
-            this.readers = readers;
-            this.writers = writers;
-            this.logger = logger;
-        }
+        private readonly Readers _readers = readers;
+        private readonly Writers _writers = writers;
+        private readonly IWeaverLogger _logger = logger;
 
         /// <summary>
         /// Finds SyncObjects fields in a type
@@ -32,27 +28,23 @@ namespace Mirage.Weaver
             foreach (var fd in td.Fields)
             {
                 if (fd.FieldType.IsGenericParameter || fd.ContainsGenericParameter) // Just ignore all generic objects.
-                {
                     continue;
-                }
 
                 var tf = fd.FieldType.Resolve();
                 if (tf == null)
-                {
                     continue;
-                }
 
                 if (tf.Implements<ISyncObject>())
                 {
                     if (fd.IsStatic)
                     {
-                        logger.Error($"{fd.Name} cannot be static", fd);
+                        _logger.Error($"{fd.Name} cannot be static", fd);
                         continue;
                     }
 
                     GenerateReadersAndWriters(fd.FieldType);
 
-                    syncObjects.Add(fd);
+                    _syncObjects.Add(fd);
                 }
             }
 
@@ -72,8 +64,8 @@ namespace Mirage.Weaver
                 {
                     if (!argument.IsGenericParameter)
                     {
-                        readers.TryGetFunction(argument, null);
-                        writers.TryGetFunction(argument, null);
+                        _readers.TryGetFunction(argument, null);
+                        _writers.TryGetFunction(argument, null);
                     }
                 }
             }
@@ -87,9 +79,9 @@ namespace Mirage.Weaver
         {
             Weaver.DebugLog(netBehaviourSubclass, "GenerateConstants ");
 
-            netBehaviourSubclass.AddToConstructor(logger, (worker) =>
+            netBehaviourSubclass.AddToConstructor(_logger, (worker) =>
             {
-                foreach (var fd in syncObjects)
+                foreach (var fd in _syncObjects)
                 {
                     GenerateSyncObjectRegistration(worker, fd);
                 }
@@ -102,9 +94,7 @@ namespace Mirage.Weaver
             {
                 // value types cant inherit from SyncObject
                 if (typeRef.IsValueType)
-                {
                     return false;
-                }
 
                 return typeRef.Resolve().Implements<ISyncObject>();
             }

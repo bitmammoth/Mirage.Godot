@@ -1,9 +1,10 @@
 using Mirage.CodeGen;
-using Mirage.Serialization;
+using Mirage.Godot.Scripts.Serialization;
+using Mirage.Weaver.Serialization;
 using Mono.Cecil;
 using Mono.Cecil.Rocks;
 
-namespace Mirage.Weaver.Serialization
+namespace Mirage.CodeGen.Weaver.Serialization
 {
     internal static class ZigZagFinder
     {
@@ -19,7 +20,9 @@ namespace Mirage.Weaver.Serialization
                 valueSerializer = bitCountSerializer.CopyWithZigZag();
             }
             else
+            {
                 throw new ZigZagException($"[ZigZagEncode] can only be used with [BitCount]");
+            }
         }
 
         /// <summary>
@@ -34,7 +37,9 @@ namespace Mirage.Weaver.Serialization
              || type.Is<ushort>()
              || type.Is<uint>()
              || type.Is<ulong>())
+            {
                 throw new ZigZagException($"[ZigZagEncode] can only be used on a signed type");
+            }
 
             if (type.Resolve().IsEnum)
             {

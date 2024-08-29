@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Threading;
 
-namespace Mirage.CodeGen
+namespace Mirage.CodeGen.Mirage.CecilExtensions.UnityCodeGen
 {
     public static class IORetry
     {
@@ -22,9 +22,7 @@ namespace Mirage.CodeGen
                         throw;
 
                     if (handleError != null)
-                    {
                         handleError.Invoke(e, retryCount);
-                    }
                     else
                     {
                         Console.WriteLine($"Caught IO Exception for {e}, trying {retryCount} more times");

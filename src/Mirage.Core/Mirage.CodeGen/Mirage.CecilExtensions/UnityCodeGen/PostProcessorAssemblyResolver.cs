@@ -1,16 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Mirage.Weaver;
 using Mono.Cecil;
 
-namespace Mirage.CodeGen
+namespace Mirage.CodeGen.Mirage.CecilExtensions.UnityCodeGen
 {
     // original code under MIT Copyright (c) 2021 Unity Technologies
     // https://github.com/Unity-Technologies/com.unity.netcode.gameobjects/blob/472d51b34520e8fb6f0aa43fd56d162c3029e0b0/com.unity.netcode.gameobjects/Editor/CodeGen/PostProcessorAssemblyResolver.cs
     internal sealed class PostProcessorAssemblyResolver : IAssemblyResolver
     {
-        private readonly Dictionary<string, AssemblyDefinition> _assemblyCache = new Dictionary<string, AssemblyDefinition>();
+        private readonly Dictionary<string, AssemblyDefinition> _assemblyCache = [];
         private AssemblyDefinition _selfAssembly;
         private readonly string _selfName;
         private readonly string _selfNameDll;
@@ -127,15 +126,11 @@ namespace Mirage.CodeGen
                     {
                         var hint = assembly.ReferenceHint;
                         if (hint.EndsWith(".dll") || hint.EndsWith(".exe"))
-                        {
                             assembly.FoundPath = hint;
-                        }
 
                         var hintDll = hint + ".dll";
                         if (File.Exists(hintDll))
-                        {
                             assembly.FoundPath = hintDll;
-                        }
 
                         if (_hintDirectories != null)
                         {

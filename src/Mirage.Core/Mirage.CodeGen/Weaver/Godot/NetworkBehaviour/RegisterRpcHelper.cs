@@ -1,24 +1,20 @@
 using Mirage.CodeGen;
-using Mirage.RemoteCalls;
+using Mirage.Godot.Scripts.Objects;
+using Mirage.Godot.Scripts.RemoteCalls;
 using Mono.Cecil;
 
-namespace Mirage.Weaver.NetworkBehaviours
+namespace Mirage.CodeGen.Weaver.Godot.NetworkBehaviour;
+
+internal class RegisterRpcHelper(ModuleDefinition module, TypeDefinition typeDefinition) : BaseMethodHelper(module, typeDefinition)
 {
-    internal class RegisterRpcHelper : BaseMethodHelper
+    public override string MethodName => nameof(RegisterRpc);
+
+    protected override void AddParameters()
     {
-        public RegisterRpcHelper(ModuleDefinition module, TypeDefinition typeDefinition) : base(module, typeDefinition)
-        {
-        }
+        Method.AddParam<RemoteCallCollection>("collection");
+    }
 
-        public override string MethodName => nameof(NetworkBehaviour.RegisterRpc);
-
-        protected override void AddParameters()
-        {
-            Method.AddParam<RemoteCallCollection>("collection");
-        }
-
-        protected override void AddLocals()
-        {
-        }
+    protected override void AddLocals()
+    {
     }
 }

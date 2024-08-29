@@ -1,6 +1,9 @@
 using System;
 using Godot;
 using Mirage;
+using Mirage.Godot.Scripts;
+using Mirage.Godot.Scripts.Attributes;
+using Mirage.Godot.Scripts.Objects;
 using Mirage.Logging;
 
 namespace Example1

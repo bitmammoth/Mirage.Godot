@@ -1,7 +1,7 @@
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-namespace Mirage.Weaver.Serialization
+namespace Mirage.CodeGen.Weaver.Serialization
 {
     /// <summary>
     /// Appends IL codes to write/read a field/param using bitpacking or extension methods
@@ -22,9 +22,7 @@ namespace Mirage.Weaver.Serialization
         protected static Instruction LoadParamOrArg0(ILProcessor worker, ParameterDefinition parameter)
         {
             if (parameter == null)
-            {
                 return worker.Create(OpCodes.Ldarg_0);
-            }
             else
             {
                 return worker.Create(OpCodes.Ldarg, parameter);

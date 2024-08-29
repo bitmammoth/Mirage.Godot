@@ -1,9 +1,10 @@
 using Mirage.CodeGen;
-using Mirage.Serialization;
+using Mirage.Godot.Scripts.Serialization;
+using Mirage.Godot.Scripts.Serialization.Packers;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-namespace Mirage.Weaver.Serialization
+namespace Mirage.CodeGen.Weaver.Serialization
 {
     internal class BitCountSerializer : ValueSerializer
     {
@@ -48,13 +49,9 @@ namespace Mirage.Weaver.Serialization
             worker.Append(worker.Create(OpCodes.Ldfld, fieldReference));
 
             if (useZigZag)
-            {
                 WriteZigZag(module, worker, fieldReference.FieldType);
-            }
             if (minValue.HasValue)
-            {
                 WriteSubtractMinValue(worker);
-            }
 
             worker.Append(worker.Create(OpCodes.Conv_U8));
             worker.Append(worker.Create(OpCodes.Ldc_I4, bitCount));
@@ -70,13 +67,9 @@ namespace Mirage.Weaver.Serialization
             worker.Append(worker.Create(OpCodes.Ldarg, valueParameter));
 
             if (useZigZag)
-            {
                 WriteZigZag(module, worker, valueParameter.ParameterType);
-            }
             if (minValue.HasValue)
-            {
                 WriteSubtractMinValue(worker);
-            }
 
             worker.Append(worker.Create(OpCodes.Conv_U8));
             worker.Append(worker.Create(OpCodes.Ldc_I4, bitCount));
@@ -112,18 +105,12 @@ namespace Mirage.Weaver.Serialization
 
             // convert result to correct size if needed
             if (typeConverter.HasValue)
-            {
                 worker.Append(worker.Create(typeConverter.Value));
-            }
 
             if (useZigZag)
-            {
                 ReadZigZag(module, worker, fieldType);
-            }
             if (minValue.HasValue)
-            {
                 ReadAddMinValue(worker);
-            }
         }
 
         private void ReadZigZag(ModuleDefinition module, ILProcessor worker, TypeReference fieldType)

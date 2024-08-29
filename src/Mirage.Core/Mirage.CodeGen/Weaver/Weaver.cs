@@ -1,11 +1,16 @@
 using System;
 using System.Collections.Generic;
 using Godot;
-using Mirage.CodeGen;
+using Mirage.CodeGen.Mirage.CecilExtensions.Logging;
+using Mirage.CodeGen.Weaver.Godot;
+using Mirage.CodeGen.Weaver.Processors;
+using Mirage.CodeGen.Weaver.Serialization;
+using Mirage.Godot.Scripts.Objects;
+using Mirage.Weaver;
 using Mono.Cecil;
 using ConditionalAttribute = System.Diagnostics.ConditionalAttribute;
 
-namespace Mirage.Weaver
+namespace Mirage.CodeGen.Weaver
 {
     /// <summary>
     /// Weaves an Assembly
@@ -15,11 +20,11 @@ namespace Mirage.Weaver
     /// - <c>WEAVER_DEBUG_TIMER</c><br />
     /// </para>
     /// </summary>
-    public class Weaver : WeaverBase
+    public class Weaver(IWeaverLogger logger) : WeaverBase(logger)
     {
-        private Readers readers;
-        private Writers writers;
-        private PropertySiteProcessor propertySiteProcessor;
+        private Readers _readers;
+        private Writers _writers;
+        private PropertySiteProcessor _propertySiteProcessor;
 
         [Conditional("WEAVER_DEBUG_LOGS")]
         public static void DebugLog(TypeDefinition td, string message)
@@ -31,8 +36,6 @@ namespace Mirage.Weaver
         {
             Console.WriteLine($"[Weaver] {msg}");
         }
-
-        public Weaver(IWeaverLogger logger) : base(logger) { }
 
         protected override ResultType Process(AssemblyDefinition assembly, CompiledAssembly compiledAssembly)
         {
@@ -46,10 +49,10 @@ namespace Mirage.Weaver
                     return ResultType.NoChanges;
                 }
 
-                readers = new Readers(module, logger);
-                writers = new Writers(module, logger);
-                propertySiteProcessor = new PropertySiteProcessor(logger);
-                var rwProcessor = new ReaderWriterProcessor(module, readers, writers, logger);
+                _readers = new Readers(module, logger);
+                _writers = new Writers(module, logger);
+                _propertySiteProcessor = new PropertySiteProcessor(logger);
+                var rwProcessor = new ReaderWriterProcessor(module, _readers, _writers, logger);
 
                 var modified = false;
                 using (timer.Sample("ReaderWriterProcessor"))
@@ -78,7 +81,7 @@ namespace Mirage.Weaver
                 {
                     using (timer.Sample("propertySiteProcessor"))
                     {
-                        propertySiteProcessor.Process(module);
+                        _propertySiteProcessor.Process(module);
                     }
 
                     using (timer.Sample("InitializeReaderAndWriters"))
@@ -121,7 +124,7 @@ namespace Mirage.Weaver
             }
         }
 
-        private void ProcessType(TypeDefinition type, List<FoundType> foundTypes)
+        private static void ProcessType(TypeDefinition type, List<FoundType> foundTypes)
         {
             if (!type.IsClass) return;
 
@@ -157,9 +160,8 @@ namespace Mirage.Weaver
             for (var i = behaviourClasses.Count - 1; i >= 0; i--)
             {
                 var behaviour = behaviourClasses[i];
-                if (NetworkBehaviourProcessor.WasProcessed(behaviour)) { continue; }
-
-                modified |= new NetworkBehaviourProcessor(behaviour, readers, writers, propertySiteProcessor, logger).Process();
+                if (NetworkBehaviourProcessor.WasProcessed(behaviour)) continue;
+                modified |= new NetworkBehaviourProcessor(behaviour, _readers, _writers, _propertySiteProcessor, logger).Process();
             }
             return modified;
         }
@@ -177,9 +179,7 @@ namespace Mirage.Weaver
             while (type != null)
             {
                 if (type.Is<NetworkBehaviour>())
-                {
                     break;
-                }
 
                 behaviourClasses.Add(type);
                 type = type.BaseType.TryResolve();
@@ -189,23 +189,16 @@ namespace Mirage.Weaver
         }
     }
 
-    public class FoundType
+    public class FoundType(TypeDefinition typeDefinition, bool isNetworkBehaviour, bool isMonoBehaviour)
     {
-        public readonly TypeDefinition TypeDefinition;
+        public readonly TypeDefinition TypeDefinition = typeDefinition;
 
         /// <summary>
         /// Is Derived From NetworkBehaviour
         /// </summary>
-        public readonly bool IsNetworkBehaviour;
+        public readonly bool IsNetworkBehaviour = isNetworkBehaviour;
 
-        public readonly bool IsMonoBehaviour;
-
-        public FoundType(TypeDefinition typeDefinition, bool isNetworkBehaviour, bool isMonoBehaviour)
-        {
-            TypeDefinition = typeDefinition;
-            IsNetworkBehaviour = isNetworkBehaviour;
-            IsMonoBehaviour = isMonoBehaviour;
-        }
+        public readonly bool IsMonoBehaviour = isMonoBehaviour;
 
         public override string ToString()
         {

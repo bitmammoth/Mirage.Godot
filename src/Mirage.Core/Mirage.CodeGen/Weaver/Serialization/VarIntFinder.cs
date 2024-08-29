@@ -1,12 +1,14 @@
 using System;
 using System.Linq.Expressions;
 using Mirage.CodeGen;
-using Mirage.Serialization;
+using Mirage.Godot.Scripts.Serialization;
+using Mirage.Godot.Scripts.Serialization.Packers;
+using Mirage.Weaver.Serialization;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
 
-namespace Mirage.Weaver.Serialization
+namespace Mirage.CodeGen.Weaver.Serialization
 {
     internal class VarIntFinder : PackerFinderBase<VarIntAttribute, VarIntFinder.VarIntSettings>
     {
@@ -70,21 +72,21 @@ namespace Mirage.Weaver.Serialization
              || fieldType.Is<short>()
              || fieldType.Is<ushort>())
             {
-                Expression<Action<VarIntPacker>> pack = (VarIntPacker p) => p.PackUshort(default, default);
+                Expression<Action<VarIntPacker>> pack = (p) => p.PackUshort(default, default);
                 return pack;
             }
 
             if (fieldType.Is<int>()
              || fieldType.Is<uint>())
             {
-                Expression<Action<VarIntPacker>> pack = (VarIntPacker p) => p.PackUint(default, default);
+                Expression<Action<VarIntPacker>> pack = (p) => p.PackUint(default, default);
                 return pack;
             }
 
             if (fieldType.Is<long>()
              || fieldType.Is<ulong>())
             {
-                Expression<Action<VarIntPacker>> pack = (VarIntPacker p) => p.PackUlong(default, default);
+                Expression<Action<VarIntPacker>> pack = (p) => p.PackUlong(default, default);
                 return pack;
             }
 
@@ -104,21 +106,21 @@ namespace Mirage.Weaver.Serialization
              || fieldType.Is<short>()
              || fieldType.Is<ushort>())
             {
-                Expression<Action<VarIntPacker>> unpack = (VarIntPacker p) => p.UnpackUshort(default);
+                Expression<Action<VarIntPacker>> unpack = (p) => p.UnpackUshort(default);
                 return unpack;
             }
 
             if (fieldType.Is<int>()
              || fieldType.Is<uint>())
             {
-                Expression<Action<VarIntPacker>> unpack = (VarIntPacker p) => p.UnpackUint(default);
+                Expression<Action<VarIntPacker>> unpack = (p) => p.UnpackUint(default);
                 return unpack;
             }
 
             if (fieldType.Is<long>()
              || fieldType.Is<ulong>())
             {
-                Expression<Action<VarIntPacker>> unpack = (VarIntPacker p) => p.UnpackUlong(default);
+                Expression<Action<VarIntPacker>> unpack = (p) => p.UnpackUlong(default);
                 return unpack;
             }
 

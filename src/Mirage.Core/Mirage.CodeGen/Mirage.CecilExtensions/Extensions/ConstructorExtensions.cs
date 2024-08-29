@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using Mirage.CodeGen.Mirage.CecilExtensions.Logging;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 

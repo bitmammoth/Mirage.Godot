@@ -1,22 +1,16 @@
 using Mirage.CodeGen;
-using Mirage.Serialization;
+using Mirage.Godot.Scripts.Serialization.Packers;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-namespace Mirage.Weaver.Serialization
+namespace Mirage.CodeGen.Weaver.Serialization
 {
-    internal class BlockSizeSerializer : ValueSerializer
+    internal class BlockSizeSerializer(int blockSize, OpCode? typeConverter) : ValueSerializer
     {
         public override bool IsIntType => true;
 
-        private readonly int blockSize;
-        private readonly OpCode? typeConverter;
-
-        public BlockSizeSerializer(int blockSize, OpCode? typeConverter)
-        {
-            this.blockSize = blockSize;
-            this.typeConverter = typeConverter;
-        }
+        private readonly int blockSize = blockSize;
+        private readonly OpCode? typeConverter = typeConverter;
 
         public override void AppendWriteField(ModuleDefinition module, ILProcessor worker, ParameterDefinition writerParameter, ParameterDefinition typeParameter, FieldReference fieldReference)
         {
@@ -51,9 +45,7 @@ namespace Mirage.Weaver.Serialization
 
             // convert result to correct size if needed
             if (typeConverter.HasValue)
-            {
                 worker.Append(worker.Create(typeConverter.Value));
-            }
         }
     }
 }

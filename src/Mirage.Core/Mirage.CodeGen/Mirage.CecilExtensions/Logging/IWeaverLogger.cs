@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
-namespace Mirage.CodeGen
+namespace Mirage.CodeGen.Mirage.CecilExtensions.Logging
 {
     // todo rename this to IWeaverErrors because it isn't really a logger
     public interface IWeaverLogger

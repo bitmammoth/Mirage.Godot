@@ -1,5 +1,6 @@
 using System.Linq;
 using Mirage.CodeGen;
+using Mirage.CodeGen.Mirage.CecilExtensions.Logging;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
@@ -8,14 +9,13 @@ namespace Mirage.Weaver
     /// <summary>
     /// Thrown when can't generate read or write for a type
     /// </summary>
-    internal class SerializeFunctionException : WeaverException
+    /// <remarks>
+    /// 
+    /// </remarks>
+    /// <param name="message">Reason method could not be generated</param>
+    /// <param name="typeRef">Type that read or write could not be generated for</param>
+    internal class SerializeFunctionException(string message, TypeReference typeRef) : WeaverException(message, typeRef, null)
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="message">Reason method could not be generated</param>
-        /// <param name="typeRef">Type that read or write could not be generated for</param>
-        public SerializeFunctionException(string message, TypeReference typeRef) : base(message, typeRef, null) { }
     }
 
     internal class NetworkBehaviourException : WeaverException
@@ -30,9 +30,8 @@ namespace Mirage.Weaver
         public SyncVarException(string message, MemberReference memberReference, SequencePoint sequencePoint) : base(message, memberReference, sequencePoint) { }
     }
 
-    internal class RpcException : WeaverException
+    internal class RpcException(string message, MethodReference rpcMethod) : WeaverException(message, rpcMethod, rpcMethod.Resolve().DebugInformation.SequencePoints.FirstOrDefault())
     {
-        public RpcException(string message, MethodReference rpcMethod) : base(message, rpcMethod, rpcMethod.Resolve().DebugInformation.SequencePoints.FirstOrDefault()) { }
     }
 }
 
@@ -48,45 +47,35 @@ namespace Mirage.Weaver.SyncVars
 
 namespace Mirage.Weaver.Serialization
 {
-    internal abstract class ValueSerializerException : WeaverException
+    internal abstract class ValueSerializerException(string message) : WeaverException(message, null, null)
     {
-        protected ValueSerializerException(string message) : base(message, null, null) { }
     }
 
-    internal class BitCountException : ValueSerializerException
+    internal class BitCountException(string message) : ValueSerializerException(message)
     {
-        public BitCountException(string message) : base(message) { }
     }
-    internal class VarIntException : ValueSerializerException
+    internal class VarIntException(string message) : ValueSerializerException(message)
     {
-        public VarIntException(string message) : base(message) { }
     }
-    internal class VarIntBlocksException : ValueSerializerException
+    internal class VarIntBlocksException(string message) : ValueSerializerException(message)
     {
-        public VarIntBlocksException(string message) : base(message) { }
     }
-    internal class ZigZagException : ValueSerializerException
+    internal class ZigZagException(string message) : ValueSerializerException(message)
     {
-        public ZigZagException(string message) : base(message) { }
     }
-    internal class BitCountFromRangeException : ValueSerializerException
+    internal class BitCountFromRangeException(string message) : ValueSerializerException(message)
     {
-        public BitCountFromRangeException(string message) : base(message) { }
     }
-    internal class FloatPackException : ValueSerializerException
+    internal class FloatPackException(string message) : ValueSerializerException(message)
     {
-        public FloatPackException(string message) : base(message) { }
     }
-    internal class Vector3PackException : ValueSerializerException
+    internal class Vector3PackException(string message) : ValueSerializerException(message)
     {
-        public Vector3PackException(string message) : base(message) { }
     }
-    internal class Vector2PackException : ValueSerializerException
+    internal class Vector2PackException(string message) : ValueSerializerException(message)
     {
-        public Vector2PackException(string message) : base(message) { }
     }
-    internal class QuaternionPackException : ValueSerializerException
+    internal class QuaternionPackException(string message) : ValueSerializerException(message)
     {
-        public QuaternionPackException(string message) : base(message) { }
     }
 }

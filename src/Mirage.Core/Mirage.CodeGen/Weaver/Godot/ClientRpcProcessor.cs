@@ -2,9 +2,14 @@ using System;
 using System.Linq;
 using System.Reflection;
 using Mirage.CodeGen;
-using Mirage.RemoteCalls;
-using Mirage.Serialization;
-using Mirage.Weaver.Serialization;
+using Mirage.CodeGen.Mirage.CecilExtensions.Logging;
+using Mirage.CodeGen.Weaver.Godot;
+using Mirage.CodeGen.Weaver.Processors;
+using Mirage.CodeGen.Weaver.Serialization;
+using Mirage.Godot.Scripts;
+using Mirage.Godot.Scripts.Attributes;
+using Mirage.Godot.Scripts.RemoteCalls;
+using Mirage.Godot.Scripts.Serialization;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
@@ -13,12 +18,8 @@ namespace Mirage.Weaver
     /// <summary>
     /// Processes [Rpc] methods in NetworkBehaviour
     /// </summary>
-    public class ClientRpcProcessor : RpcProcessor
+    public class ClientRpcProcessor(ModuleDefinition module, Readers readers, Writers writers, IWeaverLogger logger) : RpcProcessor(module, readers, writers, logger)
     {
-        public ClientRpcProcessor(ModuleDefinition module, Readers readers, Writers writers, IWeaverLogger logger) : base(module, readers, writers, logger)
-        {
-        }
-
         protected override Type AttributeType => typeof(ClientRpcAttribute);
 
         /// <summary>
@@ -77,9 +78,9 @@ namespace Mirage.Weaver
         private MethodDefinition GenerateStub(MethodDefinition md, CustomAttribute clientRpcAttr, int rpcIndex, ValueSerializer[] paramSerializers, ReturnType returnType)
         {
             // get values from attribute
-            var target = clientRpcAttr.GetField(nameof(ClientRpcAttribute.target), RpcTarget.Observers);
-            var channel = clientRpcAttr.GetField(nameof(ClientRpcAttribute.channel), 0);
-            var excludeOwner = clientRpcAttr.GetField(nameof(ClientRpcAttribute.excludeOwner), false);
+            var target = clientRpcAttr.GetField(nameof(ClientRpcAttribute.Target), RpcTarget.Observers);
+            var channel = clientRpcAttr.GetField(nameof(ClientRpcAttribute.Channel), 0);
+            var excludeOwner = clientRpcAttr.GetField(nameof(ClientRpcAttribute.ExcludeOwner), false);
 
             var rpc = SubstituteMethod(md);
 
@@ -120,7 +121,7 @@ namespace Mirage.Weaver
 
             worker.Append(worker.Create(OpCodes.Call, sendMethod));
 
-            NetworkWriterHelper.CallRelease(module, worker, writer);
+            NetworkWriterHelper.CallRelease(_module, worker, writer);
             worker.Append(worker.Create(OpCodes.Ret));
 
             return rpc;
@@ -196,7 +197,7 @@ namespace Mirage.Weaver
             });
         }
 
-        private void InvokeBody(ILProcessor worker, MethodDefinition rpc)
+        private static void InvokeBody(ILProcessor worker, MethodDefinition rpc)
         {
             worker.Append(worker.Create(OpCodes.Ldarg_0));
 
@@ -226,8 +227,8 @@ namespace Mirage.Weaver
             ValidateParameters(md, RemoteCallType.ClientRpc);
             ValidateAttribute(md, clientRpcAttr);
 
-            var target = clientRpcAttr.GetField(nameof(ClientRpcAttribute.target), RpcTarget.Observers);
-            var excludeOwner = clientRpcAttr.GetField(nameof(ClientRpcAttribute.excludeOwner), false);
+            var target = clientRpcAttr.GetField(nameof(ClientRpcAttribute.Target), RpcTarget.Observers);
+            var excludeOwner = clientRpcAttr.GetField(nameof(ClientRpcAttribute.ExcludeOwner), false);
 
             var returnType = ValidateReturnType(md, RemoteCallType.ClientRpc, target);
 
@@ -240,10 +241,10 @@ namespace Mirage.Weaver
             return new ClientRpcMethod
             {
                 Index = rpcIndex,
-                stub = md,
-                target = target,
-                excludeOwner = excludeOwner,
-                skeleton = skeletonFunc,
+                Stub = md,
+                Target = target,
+                ExcludeOwner = excludeOwner,
+                Skeleton = skeletonFunc,
                 ReturnType = returnType,
             };
         }
@@ -252,15 +253,15 @@ namespace Mirage.Weaver
         /// checks ClientRpc Attribute values are valid
         /// </summary>
         /// <exception cref="RpcException">Throws when parameter are invalid</exception>
-        private void ValidateAttribute(MethodDefinition md, CustomAttribute clientRpcAttr)
+        private static void ValidateAttribute(MethodDefinition md, CustomAttribute clientRpcAttr)
         {
-            var target = clientRpcAttr.GetField(nameof(ClientRpcAttribute.target), RpcTarget.Observers);
+            var target = clientRpcAttr.GetField(nameof(ClientRpcAttribute.Target), RpcTarget.Observers);
             if (target == RpcTarget.Player && !HasFirstParameter<NetworkPlayer>(md))
             {
                 throw new RpcException("ClientRpc with RpcTarget.Player needs a network player parameter", md);
             }
 
-            var excludeOwner = clientRpcAttr.GetField(nameof(ClientRpcAttribute.excludeOwner), false);
+            var excludeOwner = clientRpcAttr.GetField(nameof(ClientRpcAttribute.ExcludeOwner), false);
             if (target == RpcTarget.Owner && excludeOwner)
             {
                 throw new RpcException("ClientRpc with RpcTarget.Owner cannot have excludeOwner set as true", md);

@@ -1,5 +1,8 @@
 using Godot;
 using Mirage;
+using Mirage.Godot.Scripts;
+using Mirage.Godot.Scripts.Attributes;
+using Mirage.Godot.Scripts.Objects;
 using Mirage.Logging;
 
 namespace Example1
@@ -101,7 +104,7 @@ namespace Example1
             return direction;
         }
         
-        [ServerRpc(requireAuthority = false)]
+        [ServerRpc(RequireAuthority = false)]
         public void SendTestPlayerRpc()
         {
             if (this.IsServer() && !this.IsClient())

@@ -2,20 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using Mirage.CodeGen;
-using Mirage.Serialization;
-using Mirage.Weaver.Serialization;
+using Mirage.CodeGen.Mirage.CecilExtensions.Logging;
+using Mirage.Godot.Scripts.Serialization;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
-
-namespace Mirage.Weaver
+using scripts = Mirage.Godot.Scripts;
+namespace Mirage.CodeGen.Weaver.Serialization
 {
-    public class Writers : SerializeFunctionBase
+    public class Writers(ModuleDefinition module, IWeaverLogger logger) : SerializeFunctionBase(module, logger)
     {
-        public Writers(ModuleDefinition module, IWeaverLogger logger) : base(module, logger) { }
-
         protected override string FunctionTypeLog => "write function";
-        protected override Expression<Action> ArrayExpression => () => Mirage.Serialization.CollectionExtensions.WriteArray<byte>(default, default);
+        protected override Expression<Action> ArrayExpression => () => scripts.Serialization.CollectionExtensions.WriteArray<byte>(default, default);
 
         protected override MethodReference GetGenericFunction()
         {
@@ -40,20 +38,12 @@ namespace Mirage.Weaver
             return writerMethod.definition;
         }
 
-        private struct WriteMethod
+        private struct WriteMethod(MethodDefinition definition, ParameterDefinition writerParameter, ParameterDefinition typeParameter, ILProcessor worker)
         {
-            public readonly MethodDefinition definition;
-            public readonly ParameterDefinition writerParameter;
-            public readonly ParameterDefinition typeParameter;
-            public readonly ILProcessor worker;
-
-            public WriteMethod(MethodDefinition definition, ParameterDefinition writerParameter, ParameterDefinition typeParameter, ILProcessor worker)
-            {
-                this.definition = definition;
-                this.writerParameter = writerParameter;
-                this.typeParameter = typeParameter;
-                this.worker = worker;
-            }
+            public readonly MethodDefinition definition = definition;
+            public readonly ParameterDefinition writerParameter = writerParameter;
+            public readonly ParameterDefinition typeParameter = typeParameter;
+            public readonly ILProcessor worker = worker;
         }
 
         private WriteMethod GenerateWriterFunc(TypeReference typeReference)

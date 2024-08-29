@@ -1,5 +1,7 @@
 using Godot;
 using Mirage;
+using Mirage.Godot.Scripts.Components;
+using Mirage.Godot.Scripts.Objects;
 
 namespace Example1
 {
@@ -15,7 +17,7 @@ namespace Example1
 
         private void ClientStarted()
         {
-            _networkManager.Client.World.onSpawn += World_onSpawn;
+            _networkManager.Client.World.OnSpawn += World_onSpawn;
         }
 
         private void World_onSpawn(NetworkIdentity obj)

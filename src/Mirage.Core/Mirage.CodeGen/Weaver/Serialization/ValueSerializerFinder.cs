@@ -1,10 +1,12 @@
 using System;
 using Mirage.CodeGen;
-using Mirage.Serialization;
-using Mirage.Weaver.SyncVars;
+using Mirage.CodeGen.Weaver.Godot.SyncVars;
+using Mirage.Godot.Scripts.Serialization;
+using Mirage.Weaver;
+using Mirage.Weaver.Serialization;
 using Mono.Cecil;
 
-namespace Mirage.Weaver.Serialization
+namespace Mirage.CodeGen.Weaver.Serialization
 {
     internal static class ValueSerializerFinder
     {
@@ -72,9 +74,7 @@ namespace Mirage.Weaver.Serialization
                 valueSerializer = GetUsingAttribute(module, holder, attributeProvider, fieldType, fieldName, valueSerializer);
 
             if (valueSerializer == null)
-            {
                 valueSerializer = FindSerializeFunctions(writers, readers, fieldType);
-            }
 
             return valueSerializer;
         }

@@ -1,6 +1,10 @@
 using Godot;
-using JamesFrowen.PositionSync;
 using Mirage;
+using Mirage.Godot.Example1.NetworkPositionSync;
+using Mirage.Godot.Scripts;
+using Mirage.Godot.Scripts.Components;
+using Mirage.Godot.Scripts.Objects;
+using Mirage.Godot.Scripts.Utils;
 using Mirage.Logging;
 
 namespace Example2d

@@ -3,7 +3,7 @@ using System.Linq;
 using System.Reflection;
 using Mono.Cecil;
 
-namespace Mirage.CodeGen
+namespace Mirage.CodeGen.Mirage.CecilExtensions.UnityCodeGen
 {
     internal class PostProcessorReflectionImporterProvider : IReflectionImporterProvider
     {
@@ -14,17 +14,11 @@ namespace Mirage.CodeGen
     }
     // original code under MIT Copyright (c) 2021 Unity Technologies
     // https://github.com/Unity-Technologies/com.unity.netcode.gameobjects/blob/472d51b34520e8fb6f0aa43fd56d162c3029e0b0/com.unity.netcode.gameobjects/Editor/CodeGen/PostProcessorReflectionImporter.cs
-    internal class PostProcessorReflectionImporter : DefaultReflectionImporter
+    internal class PostProcessorReflectionImporter(ModuleDefinition module) : DefaultReflectionImporter(module)
     {
         private const string SystemPrivateCoreLib = "System.Private.CoreLib";
-        private readonly AssemblyNameReference _correctCorlib;
-        private readonly ModuleDefinition _mainModule;
-
-        public PostProcessorReflectionImporter(ModuleDefinition module) : base(module)
-        {
-            _mainModule = module;
-            _correctCorlib = module.AssemblyReferences.FirstOrDefault(a => a.Name == "mscorlib" || a.Name == "netstandard" || a.Name == SystemPrivateCoreLib);
-        }
+        private readonly AssemblyNameReference _correctCorlib = module.AssemblyReferences.FirstOrDefault(a => a.Name == "mscorlib" || a.Name == "netstandard" || a.Name == SystemPrivateCoreLib);
+        private readonly ModuleDefinition _mainModule = module;
 
         /// <summary>
         /// This is called per Import, so it needs to be fast
@@ -34,14 +28,10 @@ namespace Mirage.CodeGen
         public override AssemblyNameReference ImportReference(AssemblyName name)
         {
             if (_correctCorlib != null && name.Name == SystemPrivateCoreLib)
-            {
                 return _correctCorlib;
-            }
 
             if (TryImportFast(name, out var reference))
-            {
                 return reference;
-            }
 
             return base.ImportReference(name);
         }
@@ -79,9 +69,7 @@ namespace Mirage.CodeGen
         public override TypeReference ImportReference(Type type, IGenericParameterProvider context)
         {
             if (TryGetMirageType(type, out var mirageType))
-            {
                 return mirageType;
-            }
 
             return base.ImportReference(type, context);
         }
@@ -107,9 +95,7 @@ namespace Mirage.CodeGen
                         var paramTypeName = methodParams[i].ParameterType.Name;
                         var mParamTypeName = mParams[i].ParameterType.Name;
                         if (paramTypeName != mParamTypeName)
-                        {
                             break;
-                        }
                     }
 
                     if (allParamsMatch)
@@ -132,9 +118,7 @@ namespace Mirage.CodeGen
         {
             if (TryGetMirageType(field.DeclaringType, out var mirageType))
             {
-                var fieldRef = mirageType.GetField(field.Name);
-                if (fieldRef == null)
-                    throw new Exception($"Failed to find field in Mirage.Godot. type={field.DeclaringType.FullName} field={field.Name}");
+                var fieldRef = mirageType.GetField(field.Name) ?? throw new Exception($"Failed to find field in Mirage.Godot. type={field.DeclaringType.FullName} field={field.Name}");
                 return fieldRef;
             }
 

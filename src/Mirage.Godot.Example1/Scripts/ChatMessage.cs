@@ -1,8 +1,11 @@
-using Mirage;
+using Mirage.Godot.Scripts.Attributes;
 
-[NetworkMessage]
-public struct ChatMessage
+namespace Mirage.Godot.Example1.Scripts
 {
-    public string sender;
-    public string message;
+    [NetworkMessage]
+    public struct ChatMessage
+    {
+        public string sender;
+        public string message;
+    }
 }

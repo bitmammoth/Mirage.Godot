@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using Godot;
 using Mirage;
+using Mirage.Godot.Scripts;
+using Mirage.Godot.Scripts.Components;
+using Mirage.Godot.Scripts.Utils;
 
 public partial class MobSpawner : Node
 {

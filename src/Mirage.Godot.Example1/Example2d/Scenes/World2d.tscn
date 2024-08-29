@@ -5,8 +5,8 @@
 [ext_resource type="Script" path="res://Example2d/Scripts/Manager2d.cs" id="3_fm2wy"]
 [ext_resource type="PackedScene" uid="uid://bg0p7ddm0edm" path="res://Example2d/Prefabs/Player2d.tscn" id="4_6omh3"]
 [ext_resource type="PackedScene" uid="uid://cvi6cc3gurby7" path="res://Example2d/Prefabs/Cube2d.tscn" id="5_ylfgy"]
-[ext_resource type="Script" path="res://Mirage.Godot/NetworkHud.cs" id="6_7xq5x"]
-[ext_resource type="Script" path="res://Mirage.Godot/NetworkScene.cs" id="7_nfj5v"]
+[ext_resource type="Script" path="res://Mirage.Godot/Scripts/NetworkHud.cs" id="6_7xq5x"]
+[ext_resource type="Script" path="res://Mirage.Godot/Scripts/NetworkScene.cs" id="7_nfj5v"]
 
 [node name="World2d" type="Node2D"]
 
