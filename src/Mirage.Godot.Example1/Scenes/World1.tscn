@@ -1,5 +1,6 @@
-[gd_scene load_steps=15 format=3 uid="uid://c6ligiar3siat"]
+[gd_scene load_steps=16 format=3 uid="uid://c6ligiar3siat"]
 
+[ext_resource type="Script" path="res://Scenes/World1.cs" id="1_64tsy"]
 [ext_resource type="PackedScene" uid="uid://nea4bwm2wwpj" path="res://Prefabs/Player.tscn" id="2_04pam"]
 [ext_resource type="PackedScene" uid="uid://miuh5bbud7ui" path="res://Prefabs/network_manager.tscn" id="2_die1l"]
 [ext_resource type="Script" path="res://Mirage.Godot/Scripts/Components/CharacterSpawner.cs" id="2_pnjea"]
@@ -33,6 +34,7 @@ _data = {
 point_count = 5
 
 [node name="Main" type="Node3D"]
+script = ExtResource("1_64tsy")
 
 [node name="NetworkManager" parent="." node_paths=PackedStringArray("Server", "ServerObjectManager", "Client", "ClientObjectManager", "SocketFactory", "NetworkScene") instance=ExtResource("2_die1l")]
 Server = NodePath("NetworkServer")

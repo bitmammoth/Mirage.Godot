@@ -1,0 +1,88 @@
+{
+    "version": "2.0.0",
+    "configurations": [
+        {
+            "name": "Launch",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program":"D:\\GITHUB\\WORK\\GODOT\\OriginalMirage\\Godot_v4.4-dev1_mono_win64\\Godot_v4.4-dev1_mono_win64.exe",
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole",
+            "stopAtEntry": false,
+            "args": [
+                "--path",
+                "${workspaceRoot}",
+                "Development",
+                "2D"
+            ],
+            "justMyCode": true,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bLoaded '.*\\\\(.*)'\\..*Cannot find or open the PDB file\\.$",
+                "uriFormat": "https://msdl.microsoft.com/download/symbols/%1/%1.pdb"
+            },
+            "logging": {
+                "moduleLoad": false
+            }
+        },
+        {
+            "name": "Launch (Select Scene)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program":"D:\\GITHUB\\WORK\\GODOT\\OriginalMirage\\Godot_v4.4-dev1_mono_win64\\Godot_v4.4-dev1_mono_win64.exe",
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole",
+            "stopAtEntry": false,
+            "justMyCode": true,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bLoaded '.*\\\\(.*)'\\..*Cannot find or open the PDB file\\.$",
+                "uriFormat": "https://msdl.microsoft.com/download/symbols/%1/%1.pdb"
+            },
+            "args": [
+                "--path",
+                "${workspaceRoot}",
+                "${command:godot.csharp.getLaunchScene}",
+                "Development",
+                "2D"
+            ],
+            "logging": {
+                "moduleLoad": false,
+                "trace": false,
+                "threadExit": false,
+                
+            }
+        },
+        {
+            "name": "Launch Editor",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program":"D:\\GITHUB\\WORK\\GODOT\\OriginalMirage\\Godot_v4.4-dev1_mono_win64\\Godot_v4.4-dev1_mono_win64.exe",
+            "cwd": "${workspaceFolder}",
+            "console": "internalConsole",
+            "stopAtEntry": false,
+            "justMyCode": true,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bLoaded '.*\\\\(.*)'\\..*Cannot find or open the PDB file\\.$",
+                "uriFormat": "https://msdl.microsoft.com/download/symbols/%1/%1.pdb"
+            },
+            "args": [
+                "--path",
+                "${workspaceRoot}",
+                "--editor"
+            ],
+            "logging": {
+                "moduleLoad": false
+            }
+        },
+        {
+            "name": "Attach to Process",
+            "type": "coreclr",
+            "request": "attach"
+        }
+    ]
+}

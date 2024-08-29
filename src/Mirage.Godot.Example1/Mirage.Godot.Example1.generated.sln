@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.002.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mirage.godot.example1", "Mirage.godot.example1.csproj", "{D333E43F-52B9-46D9-B71C-0E912C3BBD79}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mirage.godot.example1", "Mirage.godot.example1.csproj", "{435238F7-FE0B-4131-B588-C2A6AB5CF46A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +11,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{D333E43F-52B9-46D9-B71C-0E912C3BBD79}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D333E43F-52B9-46D9-B71C-0E912C3BBD79}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D333E43F-52B9-46D9-B71C-0E912C3BBD79}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D333E43F-52B9-46D9-B71C-0E912C3BBD79}.Release|Any CPU.Build.0 = Release|Any CPU
+		{435238F7-FE0B-4131-B588-C2A6AB5CF46A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{435238F7-FE0B-4131-B588-C2A6AB5CF46A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{435238F7-FE0B-4131-B588-C2A6AB5CF46A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{435238F7-FE0B-4131-B588-C2A6AB5CF46A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

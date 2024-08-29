@@ -20,11 +20,11 @@ namespace Example1
 
         [SyncVar]
         // used to check generic dictionary writer works
-        private Godot.Collections.Dictionary<string, int> example_dictionary;
+        private Godot.Collections.Dictionary<string, int>? _example_dictionary;
 
 
         private Vector3 _targetVelocity = Vector3.Zero;
-        private CharacterBody3D _body;
+        private CharacterBody3D? _body;
 
         public override void _Ready()
         {
@@ -112,13 +112,13 @@ namespace Example1
                 if (this.IsClient())
                 {
                     GD.Print("PlayerController _Ready");
-                    example_dictionary = new Godot.Collections.Dictionary<string, int>
+                    _example_dictionary = new Godot.Collections.Dictionary<string, int>
                     {
                         { "one", 1 },
                         { "two", 2 },
                         { "three", 3 }
                     };
-                    GD.Print("example_dictionary: " + example_dictionary);
+                    GD.Print("example_dictionary: " + _example_dictionary);
 
                 }
             }
