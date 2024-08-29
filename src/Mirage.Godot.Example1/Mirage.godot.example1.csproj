@@ -1,6 +1,5 @@
 <Project Sdk="Godot.NET.Sdk/4.4.0-dev.1">
   <PropertyGroup>
-    <!--TargetFramework>net6.0</TargetFramework -->
     <TargetFramework>net8.0</TargetFramework>
     <EnableDynamicLoading>true</EnableDynamicLoading>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -20,19 +19,13 @@
     <PackageReference Include="Flecs.NET" Version="4.0.0" />
     <PackageReference Include="Flecs.NET.Native" Version="4.0.0" />
   </ItemGroup>
-  <!--Import Project="D:/GITHUB/WORK/GODOT/FLECS/Retry/Flecs.NET/src/Flecs.NET.Native/Flecs.NET.Native.targets" />
-    <ItemGroup>
-        <ProjectReference Include="D:/GITHUB/WORK/GODOT/FLECS/Retry/Flecs.NET/src/Flecs.NET/Flecs.NET.csproj" />
-    </ItemGroup-->
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="dotnet build $(ProjectDir)/../Mirage.Core/Mirage.CodeGen/Mirage.CodeGen.csproj -c Release" />
-    <!--Exec Command="$(ProjectDir)../Mirage.Core/Mirage.CodeGen/bin/Release/net6.0/Mirage.CodeGen.exe $(TargetPath) -force" /-->
     <Exec Command="$(ProjectDir)../Mirage.Core/Mirage.CodeGen/bin/Release/net8.0/Mirage.CodeGen.exe $(TargetPath) -force" />
     <Error Condition="$(ExitCode) == 1" />
   </Target>
   <Target Name="PrePublish" BeforeTargets="Publish">
     <Exec Command="dotnet build $(ProjectDir)/../Mirage.Core/Mirage.CodeGen/Mirage.CodeGen.csproj -c Release" />
-    <!--Exec Command="$(ProjectDir)../Mirage.Core/Mirage.CodeGen/bin/Release/net6.0/Mirage.CodeGen.exe $(PublishDir)$(TargetFileName) $(TargetDir) -force" /-->
     <Exec Command="$(ProjectDir)../Mirage.Core/Mirage.CodeGen/bin/Release/net8.0/Mirage.CodeGen.exe $(PublishDir)$(TargetFileName) $(TargetDir) -force" />
     <Error Condition="$(ExitCode) == 1" />
   </Target>
