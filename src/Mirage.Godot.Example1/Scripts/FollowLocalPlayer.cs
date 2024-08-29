@@ -1,5 +1,4 @@
 using Godot;
-using Mirage;
 using Mirage.Godot.Scripts.Components;
 using Mirage.Godot.Scripts.Objects;
 

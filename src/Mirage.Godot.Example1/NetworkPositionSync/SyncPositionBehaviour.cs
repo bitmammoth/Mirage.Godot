@@ -1,7 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
 using Godot;
-using Mirage;
 using Mirage.Godot.Scripts.Attributes;
 using Mirage.Godot.Scripts.Objects;
 using Mirage.Godot.Scripts.Serialization;
@@ -14,7 +13,7 @@ namespace Mirage.Godot.Example1.NetworkPositionSync;
 /// This NetworkBehaviour allows position and rotation synchronization over the network. Keep in mind that the <see cref="SyncPositionSystem"/> is 
 /// still required in order to actually sync the data over the network.
 /// </summary>
-	[GlobalClass]
+[GlobalClass]
 public partial class SyncPositionBehaviour : NetworkBehaviour
 {
     private static readonly ILogger logger = LogFactory.GetLogger<SyncPositionBehaviour>();

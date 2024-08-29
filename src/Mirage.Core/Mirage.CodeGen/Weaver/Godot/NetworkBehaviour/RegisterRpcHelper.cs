@@ -1,5 +1,3 @@
-using Mirage.CodeGen;
-using Mirage.Godot.Scripts.Objects;
 using Mirage.Godot.Scripts.RemoteCalls;
 using Mono.Cecil;
 

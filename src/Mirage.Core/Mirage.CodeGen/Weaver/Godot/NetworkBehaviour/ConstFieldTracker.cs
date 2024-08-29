@@ -1,5 +1,4 @@
-﻿using Mirage.CodeGen;
-using Mirage.Weaver;
+﻿using Mirage.Weaver;
 using Mono.Cecil;
 
 namespace Mirage.CodeGen.Weaver.Godot.NetworkBehaviour;

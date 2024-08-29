@@ -1,9 +1,3 @@
-
-
-using System.Collections.Generic;
-using Mirage;
-using Godot;
-
 /*
 namespace JamesFrowen.PositionSync
 {

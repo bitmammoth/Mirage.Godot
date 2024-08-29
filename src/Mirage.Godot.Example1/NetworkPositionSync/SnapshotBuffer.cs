@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Mirage.Logging;
-using Godot;
 
 namespace Mirage.Godot.Example1.NetworkPositionSync;
 

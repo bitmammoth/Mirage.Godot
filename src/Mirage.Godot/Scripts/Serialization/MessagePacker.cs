@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Mirage.Godot.Scripts;
 using Mirage.Godot.Scripts.Objects;
 
 namespace Mirage.Godot.Scripts.Serialization;

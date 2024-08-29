@@ -1,5 +1,4 @@
 using System;
-using Mirage.CodeGen;
 using Mirage.Weaver.Serialization;
 using Mono.Cecil;
 using Mono.Cecil.Cil;

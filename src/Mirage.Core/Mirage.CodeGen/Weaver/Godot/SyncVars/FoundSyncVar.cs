@@ -1,4 +1,3 @@
-using Mirage.CodeGen;
 using Mirage.CodeGen.Weaver.Godot.NetworkBehaviour;
 using Mirage.CodeGen.Weaver.Serialization;
 using Mirage.Godot.Scripts;

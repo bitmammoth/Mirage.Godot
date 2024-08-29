@@ -1,5 +1,4 @@
 using System;
-using Mirage.CodeGen;
 using Mirage.CodeGen.Weaver.Godot.SyncVars;
 using Mirage.Godot.Scripts;
 using Mirage.Godot.Scripts.Serialization;

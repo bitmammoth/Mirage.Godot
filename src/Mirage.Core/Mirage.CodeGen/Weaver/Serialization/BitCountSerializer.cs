@@ -1,4 +1,3 @@
-using Mirage.CodeGen;
 using Mirage.Godot.Scripts.Serialization;
 using Mirage.Godot.Scripts.Serialization.Packers;
 using Mono.Cecil;

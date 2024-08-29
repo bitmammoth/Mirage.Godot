@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Mirage.CodeGen;
 using Mirage.CodeGen.Mirage.CecilExtensions.Logging;
 using Mirage.CodeGen.Weaver.Serialization;
 using Mirage.Godot.Scripts;

@@ -1,6 +1,5 @@
 using System;
 using System.Linq.Expressions;
-using Mirage.CodeGen;
 using Mirage.Godot.Scripts.Serialization;
 using Mirage.Godot.Scripts.Serialization.Packers;
 using Mirage.Weaver.Serialization;

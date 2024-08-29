@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using Mirage.CodeGen;
 using Mirage.Godot.Scripts.Attributes;
 using Mirage.Weaver.SyncVars;
 using Mono.Cecil;

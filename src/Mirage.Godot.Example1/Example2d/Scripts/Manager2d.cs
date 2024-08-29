@@ -1,5 +1,4 @@
 using Godot;
-using Mirage;
 using Mirage.Godot.Example1.NetworkPositionSync;
 using Mirage.Godot.Scripts;
 using Mirage.Godot.Scripts.Components;

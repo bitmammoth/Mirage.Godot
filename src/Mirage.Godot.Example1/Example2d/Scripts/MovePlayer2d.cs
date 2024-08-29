@@ -1,5 +1,4 @@
 using Godot;
-using Mirage;
 using Mirage.Godot.Scripts.Objects;
 
 namespace Example2d

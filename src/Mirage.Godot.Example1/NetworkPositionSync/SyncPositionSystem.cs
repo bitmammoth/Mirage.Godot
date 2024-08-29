@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Godot;
-using Mirage.Godot.Example1.Mirage.Godot;
 using Mirage.Godot.Scripts;
 using Mirage.Godot.Scripts.Attributes;
 using Mirage.Godot.Scripts.Objects;

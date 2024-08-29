@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using Mirage;
 using Mirage.Logging;
 using Godot;
 using Mirage.Godot.Scripts.Utils;
