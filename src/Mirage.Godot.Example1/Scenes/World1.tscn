@@ -40,16 +40,13 @@ ServerObjectManager = NodePath("ServerObjectManager")
 Client = NodePath("NetworkClient")
 ClientObjectManager = NodePath("ClientObjectManager")
 SocketFactory = NodePath("UdpSocketFactory")
-EnableAllLogs = true
 NetworkScene = NodePath("NetworkScene")
 
 [node name="NetworkServer" parent="NetworkManager" index="0" node_paths=PackedStringArray("SocketFactory", "ObjectManager")]
-EnablePeerMetrics = true
 SocketFactory = NodePath("../UdpSocketFactory")
 ObjectManager = NodePath("../ServerObjectManager")
 
 [node name="NetworkClient" parent="NetworkManager" index="2" node_paths=PackedStringArray("SocketFactory", "ObjectManager")]
-EnablePeerMetrics = true
 SocketFactory = NodePath("../UdpSocketFactory")
 ObjectManager = NodePath("../ClientObjectManager")
 

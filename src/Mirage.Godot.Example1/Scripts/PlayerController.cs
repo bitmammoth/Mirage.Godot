@@ -58,7 +58,17 @@ namespace Example1
                 _body.MoveAndSlide();
             }
         }
-
+        public override void _Input(InputEvent @event)
+        {
+            base._Input(@event);
+            if (this.HasAuthority() && this.IsClient())
+            {
+                if (@event is InputEventMouseButton mouseButton && mouseButton.ButtonIndex == MouseButton.Left)
+                {
+                    SendTestPlayerRpc();
+                }
+            }
+        }
         private static float GetAngle(Vector3 direction)
         {
             direction.Y = 0;
@@ -89,6 +99,27 @@ namespace Example1
             }
 
             return direction;
+        }
+        
+        [ServerRpc(requireAuthority = false)]
+        public void SendTestPlayerRpc()
+        {
+            if (this.IsServer() && !this.IsClient())
+            {
+                GD.Print("RPC Player ToServer Received");
+                if (this.IsClient())
+                {
+                    GD.Print("PlayerController _Ready");
+                    example_dictionary = new Godot.Collections.Dictionary<string, int>
+                    {
+                        { "one", 1 },
+                        { "two", 2 },
+                        { "three", 3 }
+                    };
+                    GD.Print("example_dictionary: " + example_dictionary);
+
+                }
+            }
         }
     }
 }

@@ -8,9 +8,9 @@
     ".NETCoreApp,Version=v8.0": {
       "Mirage.Godot/1.0.0": {
         "dependencies": {
-          "Godot.SourceGenerators": "4.3.0",
-          "GodotSharp": "4.3.0",
-          "GodotSharpEditor": "4.3.0",
+          "Godot.SourceGenerators": "4.4.0-dev.1",
+          "GodotSharp": "4.4.0-dev.1",
+          "GodotSharpEditor": "4.4.0-dev.1",
           "Mirage.Logging": "1.0.0",
           "Mirage.SocketLayer": "1.0.0"
         },
@@ -18,26 +18,24 @@
           "Mirage.Godot.dll": {}
         }
       },
-      "Godot.SourceGenerators/4.3.0": {},
-      "GodotSharp/4.3.0": {
+      "Godot.SourceGenerators/4.4.0-dev.1": {},
+      "GodotSharp/4.4.0-dev.1": {
         "runtime": {
-          "lib/net6.0/GodotPlugins.dll": {
-            "assemblyVersion": "1.0.0.0",
-            "fileVersion": "1.0.0.0"
-          },
           "lib/net6.0/GodotSharp.dll": {
-            "assemblyVersion": "4.3.0.0",
-            "fileVersion": "4.3.0.0"
-          },
-          "lib/net6.0/GodotSharpEditor.dll": {
-            "assemblyVersion": "4.3.0.0",
-            "fileVersion": "4.3.0.0"
+            "assemblyVersion": "4.4.0.0",
+            "fileVersion": "4.4.0.0"
           }
         }
       },
-      "GodotSharpEditor/4.3.0": {
+      "GodotSharpEditor/4.4.0-dev.1": {
         "dependencies": {
-          "GodotSharp": "4.3.0"
+          "GodotSharp": "4.4.0-dev.1"
+        },
+        "runtime": {
+          "lib/net6.0/GodotSharpEditor.dll": {
+            "assemblyVersion": "4.4.0.0",
+            "fileVersion": "4.4.0.0"
+          }
         }
       },
       "Mirage.Logging/1.0.0": {
@@ -61,26 +59,26 @@
       "serviceable": false,
       "sha512": ""
     },
-    "Godot.SourceGenerators/4.3.0": {
+    "Godot.SourceGenerators/4.4.0-dev.1": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-wQffpgXJES3ukYcPJIFdJgnYz9AiYlD17QkBq+31TkkZA5om48/FOF/v0GaYFjNjnDb+A+ya4OBUg9ubIcpz4A==",
-      "path": "godot.sourcegenerators/4.3.0",
-      "hashPath": "godot.sourcegenerators.4.3.0.nupkg.sha512"
+      "sha512": "sha512-2iEdubDuOnK2gt2NrTeKMDpOWxx5kC9Uvc/Di5yjk8ZWIaEfG2GZDUADvE1JPEuMi15xtN+/9bCTaQXNyS7JJw==",
+      "path": "godot.sourcegenerators/4.4.0-dev.1",
+      "hashPath": "godot.sourcegenerators.4.4.0-dev.1.nupkg.sha512"
     },
-    "GodotSharp/4.3.0": {
+    "GodotSharp/4.4.0-dev.1": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-S2A18eIFn+u42qGakhWmroplvE4BUa1z4Y6jdFCMgKt2SIcitCD7T8FW/AGr1svne47viO0Jf39/EOZtVmziqw==",
-      "path": "godotsharp/4.3.0",
-      "hashPath": "godotsharp.4.3.0.nupkg.sha512"
+      "sha512": "sha512-uZQ6hEnw8alGQgCIsPX4eJ7S9UdsYF6YZ9fCejx2AvwQZFw0SqJRMiPraxZuhc+IAqk5hS2xB3j/Ne+4r6ag0A==",
+      "path": "godotsharp/4.4.0-dev.1",
+      "hashPath": "godotsharp.4.4.0-dev.1.nupkg.sha512"
     },
-    "GodotSharpEditor/4.3.0": {
+    "GodotSharpEditor/4.4.0-dev.1": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-j5ULsDVN0BC9iY/E+dEqanCSEe53oKKWy4gAYJcDpPgEHmrThKCxzgiFpM8mApXTsiUCwDQRPEvJzP10tWB2yw==",
-      "path": "godotsharpeditor/4.3.0",
-      "hashPath": "godotsharpeditor.4.3.0.nupkg.sha512"
+      "sha512": "sha512-3SlAYAVfQt6GcqZDsTI+ULuI8VE9tXNrK35qgsE8uiDWQ+w7p2Ymo+oL9T928Jhu3B2TrEoakOz0tlUDD6eWrQ==",
+      "path": "godotsharpeditor/4.4.0-dev.1",
+      "hashPath": "godotsharpeditor.4.4.0-dev.1.nupkg.sha512"
     },
     "Mirage.Logging/1.0.0": {
       "type": "project",

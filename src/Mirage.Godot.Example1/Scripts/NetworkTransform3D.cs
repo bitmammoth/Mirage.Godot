@@ -1,3 +1,4 @@
+using System;
 using Godot;
 using Mirage;
 using Mirage.Logging;
@@ -52,6 +53,41 @@ namespace Example1
                 _previousRot = currentRot;
             }
         }
+        [ServerRpc]
+        private void SendTestRpc()
+        {
+            //if (logger.LogEnabled()) logger.Log($"RPC ToServer: {Identity.NetId}");
+            if(this.IsServer())
+            {
+              //  if (logger.LogEnabled()) logger.Log($"RPC ToServer: {Identity.NetId} is server");
+                //GD.Print("RPC ToServer Received");
+            }
+            SendTestRpcToClient();
+        }
+        [ClientRpc]
+        private void SendTestRpcToClient()
+        {
+            if (logger.LogEnabled()) logger.Log($"RPC ToClient: {Identity.NetId}");
+            if (this.HasAuthority())
+            {
+                if (logger.LogEnabled()) logger.Log($"RPC ToClient: {Identity.NetId} has authority");
+            }
+            if (Identity.Owner == null)
+            {
+                if (logger.LogEnabled()) logger.Log($"RPC ToClient: {Identity.NetId} owner is null");
+            }
+            if(this.IsServer())
+            {
+                if (logger.LogEnabled()) logger.Log($"RPC ToClient: {Identity.NetId} is server");
+                GD.Print("RPC ToClient");
+            }
+            if(this.IsClient())
+            {
+                if (logger.LogEnabled()) logger.Log($"RPC ToClient: {Identity.NetId} is client");
+                GD.Print("RPC ToClient Received");
+            }
+        }
+
 
         [ServerRpc]
         private void SendUpdateRelayed(Vector3 pos, Quaternion rot)
