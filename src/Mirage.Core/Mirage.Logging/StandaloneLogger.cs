@@ -58,13 +58,13 @@ namespace Mirage.Logging
         }
 
         #region Implementation of ILogHandler
-        private ConsoleColor[] logTypeToColor = new ConsoleColor[] {
+        private ConsoleColor[] logTypeToColor = [
             ConsoleColor.Red,
             ConsoleColor.Red,
             ConsoleColor.Yellow,
             ConsoleColor.White,
             ConsoleColor.Red,
-        };
+        ];
 
 
         public void LogFormat(LogType logType, string format, params object[] args)

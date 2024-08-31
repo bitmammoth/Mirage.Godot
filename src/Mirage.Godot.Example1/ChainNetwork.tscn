@@ -1,0 +1,51 @@
+[gd_scene load_steps=8 format=3 uid="uid://b42rwornnwm45"]
+
+[ext_resource type="Script" path="res://ChainNetwork.cs" id="1_ty00x"]
+[ext_resource type="PackedScene" uid="uid://r60d7rcoabo5" path="res://Scenes/game_client_manager.tscn" id="2_6iknx"]
+[ext_resource type="PackedScene" uid="uid://cmoonaqbsxe3w" path="res://Scenes/gateway_manager.tscn" id="3_8wasy"]
+[ext_resource type="Script" path="res://Scripts/GatewayNetworkClient.cs" id="3_notcj"]
+[ext_resource type="PackedScene" uid="uid://d0lsqx10xwtug" path="res://Scenes/authentication_manger.tscn" id="4_kxval"]
+[ext_resource type="PackedScene" uid="uid://dnxcay6jtvpae" path="res://Scenes/game_server_manager.tscn" id="5_jp8nr"]
+[ext_resource type="PackedScene" uid="uid://bmt1nykwr2j52" path="res://Scenes/my_network_behaviour.tscn" id="7_wka44"]
+
+[node name="Hotel" type="Node2D" node_paths=PackedStringArray("_gameClientManager", "_gatewayManager", "_authenticationManager", "_gameServerManager", "_myNetworkBehaviour")]
+script = ExtResource("1_ty00x")
+_gameClientManager = NodePath("GameClientManager")
+_gatewayManager = NodePath("GatewayManager")
+_authenticationManager = NodePath("AuthenticationManger")
+_gameServerManager = NodePath("GameServerManager")
+_myNetworkBehaviour = NodePath("MyNetworkBehaviour")
+
+[node name="GameClientManager" parent="." node_paths=PackedStringArray("NetworkScene") instance=ExtResource("2_6iknx")]
+NetworkScene = NodePath("NetworkScene")
+
+[node name="GatewayClient" parent="GameClientManager" index="0"]
+script = ExtResource("3_notcj")
+
+[node name="GatewayClientObjectManager" parent="GameClientManager" index="2"]
+PackedScenes = Array[PackedScene]([ExtResource("7_wka44")])
+
+[node name="GameClientObjectManager" parent="GameClientManager" index="3"]
+PackedScenes = Array[PackedScene]([])
+
+[node name="GatewayManager" parent="." node_paths=PackedStringArray("NetworkScene") instance=ExtResource("3_8wasy")]
+EnableAllLogs = false
+NetworkScene = NodePath("../GameClientManager/NetworkScene")
+
+[node name="AuthClientObjectManager" parent="GatewayManager" index="3"]
+PackedScenes = Array[PackedScene]([])
+
+[node name="AuthenticationManger" parent="." instance=ExtResource("4_kxval")]
+
+[node name="GameServerManager" parent="." instance=ExtResource("5_jp8nr")]
+EnableAllLogs = false
+
+[node name="AuthClientObjectManager" parent="GameServerManager" index="3"]
+PackedScenes = Array[PackedScene]([])
+
+[node name="MyNetworkBehaviour" parent="." instance=ExtResource("7_wka44")]
+
+[editable path="GameClientManager"]
+[editable path="GatewayManager"]
+[editable path="AuthenticationManger"]
+[editable path="GameServerManager"]

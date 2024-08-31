@@ -191,7 +191,7 @@ namespace Mirage.Godot.Example1.NetworkPositionSync
             clientScaleTime = Mathf.Clamp(CalculateTimeScale((float)diffAvg.Value), 0.5f, 2f);
 
             // todo add trace level
-            if (logger.LogEnabled()) logger.Log($"st: {serverTime:0.00}, ct: {_clientTime:0.00}, diff: {diff * 1000:0.0}, wanted: {diffAvg.Value * 1000:0.0}, scale: {clientScaleTime}");
+            //if (logger.LogEnabled()) logger.Log($"st: {serverTime:0.00}, ct: {_clientTime:0.00}, diff: {diff * 1000:0.0}, wanted: {diffAvg.Value * 1000:0.0}, scale: {clientScaleTime}");
         }
 
         /// <summary>

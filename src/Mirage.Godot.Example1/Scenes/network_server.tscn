@@ -1,0 +1,15 @@
+[gd_scene load_steps=4 format=3 uid="uid://da0mruqtcrc8v"]
+
+[ext_resource type="Script" path="res://Mirage.Godot/Scripts/NetworkServer.cs" id="1_tfsig"]
+[ext_resource type="Script" path="res://Mirage.Godot/Scripts/Objects/ServerObjectManager.cs" id="2_mecqi"]
+[ext_resource type="Script" path="res://Mirage.Godot/Scripts/Udp/UdpSocketFactory.cs" id="3_sy73y"]
+
+[node name="NetworkServer" type="Node"]
+script = ExtResource("1_tfsig")
+
+[node name="ServerObjectManager" type="Node" parent="."]
+script = ExtResource("2_mecqi")
+OnlySpawnOnAuthenticated = true
+
+[node name="UdpSocketFactory" type="Node" parent="."]
+script = ExtResource("3_sy73y")

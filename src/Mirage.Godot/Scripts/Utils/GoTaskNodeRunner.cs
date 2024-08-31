@@ -105,7 +105,7 @@ internal class UpdateQueue
     private const int QUEUE_COUNT = 2;
     // need 2 queues so that item, enqueued while in this fixed update are not invoked till next update (otherwise we might have infinite loop)
     private int _queueIndex;
-    private readonly Queue<Action>[] _actionQueue = new Queue<Action>[QUEUE_COUNT] { new Queue<Action>(), new Queue<Action>() };
+    private readonly Queue<Action>[] _actionQueue = [new Queue<Action>(), new Queue<Action>()];
 
     public int ActionCount => _actionQueue[_queueIndex].Count;
 

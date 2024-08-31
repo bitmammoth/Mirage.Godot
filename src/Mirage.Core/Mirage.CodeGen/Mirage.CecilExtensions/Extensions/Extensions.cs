@@ -284,7 +284,7 @@ namespace Mirage.CodeGen
 
         public static void AddCustomAttribute(this ICustomAttributeProvider attributeProvider, ModuleDefinition module, Type t)
         {
-            var constructor = t.GetConstructor(new Type[0]);
+            var constructor = t.GetConstructor([]);
             var customAttribute = new CustomAttribute(module.ImportReference(constructor));
             attributeProvider.CustomAttributes.Add(customAttribute);
         }

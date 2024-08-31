@@ -1,5 +1,3 @@
-using System;
-using System.Threading.Tasks;
 using Mirage.Godot.Scripts.Serialization;
 namespace Mirage.Godot.Scripts.Authentication;
 public partial class NetworkAuthenticator<T> : NetworkAuthenticator, INetworkAuthenticator

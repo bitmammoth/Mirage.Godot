@@ -1,0 +1,51 @@
+[gd_scene load_steps=9 format=3 uid="uid://r60d7rcoabo5"]
+
+[ext_resource type="Script" path="res://Mirage.Godot/Scripts/Components/DualNetworkManager.cs" id="1_136sa"]
+[ext_resource type="Script" path="res://Mirage.Godot/Scripts/NetworkClient.cs" id="4_s6ytd"]
+[ext_resource type="Script" path="res://Mirage.Godot/Scripts/Objects/ClientObjectManager.cs" id="5_aqi4r"]
+[ext_resource type="PackedScene" uid="uid://nea4bwm2wwpj" path="res://Prefabs/Player.tscn" id="6_xlxe0"]
+[ext_resource type="PackedScene" uid="uid://casfcv0sbio2i" path="res://Prefabs/Mob.tscn" id="7_foqn8"]
+[ext_resource type="PackedScene" uid="uid://d3g3tl662iye2" path="res://Prefabs/Player2d.tscn" id="8_5ukyl"]
+[ext_resource type="Script" path="res://Mirage.Godot/Scripts/Udp/UdpSocketFactory.cs" id="9_f77a4"]
+[ext_resource type="Script" path="res://Mirage.Godot/Scripts/NetworkScene.cs" id="10_nh2gn"]
+
+[node name="GameClientManager" type="Node" node_paths=PackedStringArray("Client1", "Client2", "ClientObjectManager1", "ClientObjectManager2", "SocketFactory1", "SocketFactory2")]
+script = ExtResource("1_136sa")
+Client1 = NodePath("GatewayClient")
+Client2 = NodePath("GameClient")
+ClientObjectManager1 = NodePath("GatewayClientObjectManager")
+ClientObjectManager2 = NodePath("GameClientObjectManager")
+SocketFactory1 = NodePath("GatewayUdpSocketFactory")
+SocketFactory2 = NodePath("GameUdpSocketFactory")
+MaxConnections = 1
+EnableAllLogs = true
+
+[node name="GatewayClient" type="Node" parent="." node_paths=PackedStringArray("SocketFactory", "ObjectManager")]
+script = ExtResource("4_s6ytd")
+SocketFactory = NodePath("../GatewayUdpSocketFactory")
+ObjectManager = NodePath("../GatewayClientObjectManager")
+
+[node name="GameClient" type="Node" parent="." node_paths=PackedStringArray("SocketFactory", "ObjectManager")]
+script = ExtResource("4_s6ytd")
+SocketFactory = NodePath("../GameUdpSocketFactory")
+ObjectManager = NodePath("../GameClientObjectManager")
+
+[node name="GatewayClientObjectManager" type="Node" parent="."]
+script = ExtResource("5_aqi4r")
+PackedScenes = Array[PackedScene]([ExtResource("6_xlxe0"), ExtResource("7_foqn8"), ExtResource("8_5ukyl")])
+
+[node name="GameClientObjectManager" type="Node" parent="."]
+script = ExtResource("5_aqi4r")
+PackedScenes = Array[PackedScene]([ExtResource("6_xlxe0"), ExtResource("7_foqn8"), ExtResource("8_5ukyl")])
+
+[node name="GatewayUdpSocketFactory" type="Node" parent="."]
+script = ExtResource("9_f77a4")
+Port = 9000
+
+[node name="GameUdpSocketFactory" type="Node" parent="."]
+script = ExtResource("9_f77a4")
+Port = 9003
+
+[node name="NetworkScene" type="Node" parent="." node_paths=PackedStringArray("_sceneObjects")]
+script = ExtResource("10_nh2gn")
+_sceneObjects = []

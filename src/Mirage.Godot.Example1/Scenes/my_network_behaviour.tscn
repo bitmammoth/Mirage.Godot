@@ -1,0 +1,11 @@
+[gd_scene load_steps=3 format=3 uid="uid://bmt1nykwr2j52"]
+
+[ext_resource type="Script" path="res://MyNetworkBehaviour.cs" id="1_xx2v6"]
+[ext_resource type="Script" path="res://Mirage.Godot/Scripts/Objects/NetworkIdentity.cs" id="2_djqhn"]
+
+[node name="MyNetworkBehaviour" type="Node"]
+script = ExtResource("1_xx2v6")
+
+[node name="NetworkIdentity" type="Node" parent="." node_paths=PackedStringArray("_root")]
+script = ExtResource("2_djqhn")
+_root = NodePath("..")

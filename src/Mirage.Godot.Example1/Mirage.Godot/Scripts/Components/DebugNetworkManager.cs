@@ -20,7 +20,7 @@ public partial class DebugNetworkManager : NetworkManager
             LogFactory.GetLogger<Peer>().filterLogType = LogType.Warning;
             LogFactory.GetLogger("Example1.NetworkTransform3D").filterLogType = LogType.Warning;
         }
-
+    
         //LogFactory.GetLogger<SyncVarSender>().filterLogType = LogType.Log;
         //LogFactory.GetLogger<SyncVarReceiver>().filterLogType = LogType.Log;
         LogFactory.GetLogger<NetworkManager>().filterLogType = LogType.Log;
@@ -43,7 +43,7 @@ public partial class DebugNetworkManager : NetworkManager
             MaxConnections = MaxConnections,
         };
     }
-
+    
     public override void StartServer()
     {
         Server.PeerConfig = GetConfig();

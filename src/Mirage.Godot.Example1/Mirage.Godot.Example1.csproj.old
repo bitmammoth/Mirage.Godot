@@ -1,0 +1,32 @@
+<Project Sdk="Godot.NET.Sdk/4.4.0-dev.1">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
+    <PublishAOT>true</PublishAOT>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Mirage.Core\Mirage.Logging\Mirage.Logging.csproj" />
+    <ProjectReference Include="..\Mirage.Core\Mirage.SocketLayer\Mirage.SocketLayer.csproj" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+    <PackageReference Include="Flecs.NET.Debug" Version="4.0.0" />
+    <PackageReference Include="Flecs.NET.Native.Debug" Version="4.0.0" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)' == 'Release'">
+    <PackageReference Include="Flecs.NET" Version="4.0.0" />
+    <PackageReference Include="Flecs.NET.Native" Version="4.0.0" />
+  </ItemGroup>
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="dotnet build $(ProjectDir)/../Mirage.Core/Mirage.CodeGen/Mirage.CodeGen.csproj -c Release" />
+    <Exec Command="$(ProjectDir)../Mirage.Core/Mirage.CodeGen/bin/Release/net8.0/Mirage.CodeGen.exe $(TargetPath) -force" />
+    <Error Condition="$(ExitCode) == 1" />
+  </Target>
+  <Target Name="PrePublish" BeforeTargets="Publish">
+    <Exec Command="dotnet build $(ProjectDir)/../Mirage.Core/Mirage.CodeGen/Mirage.CodeGen.csproj -c Release" />
+    <Exec Command="$(ProjectDir)../Mirage.Core/Mirage.CodeGen/bin/Release/net8.0/Mirage.CodeGen.exe $(PublishDir)$(TargetFileName) $(TargetDir) -force" />
+    <Error Condition="$(ExitCode) == 1" />
+  </Target>
+</Project>

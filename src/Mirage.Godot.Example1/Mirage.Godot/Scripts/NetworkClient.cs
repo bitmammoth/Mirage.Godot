@@ -1,7 +1,9 @@
 using System;
 using System.Linq;
+using Flecs.NET.Core;
 using Godot;
 using Mirage.Godot.Scripts.Authentication;
+using Mirage.Godot.Scripts.Components.Authenticators;
 using Mirage.Godot.Scripts.Events;
 using Mirage.Godot.Scripts.Objects;
 using Mirage.Godot.Scripts.Serialization;
@@ -18,7 +20,6 @@ public enum ConnectState
     Connecting,
     Connected,
 }
-
 /// <summary>
 /// This is a network client class used by the networking system. It contains a NetworkConnection that is used to connect to a network server.
 /// <para>The <see cref="NetworkClient">NetworkClient</see> handle connection state, messages handlers, and connection configuration. There can be many <see cref="NetworkClient">NetworkClient</see> instances in a process at a time, but only one that is connected to a game server (<see cref="NetworkServer">NetworkServer</see>) that uses spawned objects.</para>
@@ -52,7 +53,7 @@ public partial class NetworkClient : Node, IMessageSender
     public Config PeerConfig { get; set; }
 
     private Peer _peer;
-
+    private CryptoAuthenticator _cryptoAuthenticator;
     private AddLateEvent _started = new AddLateEvent();
     private AddLateEvent<NetworkPlayer> _connected = new AddLateEvent<NetworkPlayer>();
     private AddLateEvent<NetworkPlayer> _authenticated = new AddLateEvent<NetworkPlayer>();
@@ -95,7 +96,7 @@ public partial class NetworkClient : Node, IMessageSender
     /// This gives the current connection status of the client.
     /// </summary>
     public new bool IsConnected => _connectState == ConnectState.Connected;
-
+    public World FlecsWorld { get; private set; }
     public NetworkWorld World { get; private set; }
     public SyncVarSender SyncVarSender { get; private set; }
     private SyncVarReceiver _syncVarReceiver;
@@ -111,6 +112,25 @@ public partial class NetworkClient : Node, IMessageSender
     /// </summary>
     public bool IsLocalClient { get; private set; }
 
+
+    public async override void _Ready()
+    {
+        //GD.Print("NetworkClient Ready");
+        //FlecsWorld = Flecs.NET.Core.World.Create();
+        //FlecsWorld.Set(new Web3Component());
+        //await Run();
+        //Connect();
+    }
+    public async Task Run()
+    {
+        CryptoLoginMessage message = await FlecsWorld.Get<Web3Component>().CryptoLogin();
+        if (message.CryptoAddress.Length != 42)
+        {
+            GD.PrintErr("CryptoAddress is not valid!");
+            return;
+        }
+        GD.Print($"CryptoAddress: {message.CryptoAddress}");
+    }
     /// <summary>
     /// Connect client to a NetworkServer instance.
     /// </summary>
@@ -244,19 +264,23 @@ public partial class NetworkClient : Node, IMessageSender
         // we can just use the same logic as normal clients
         // this will cause both server and client to call SetAuthentication first,
         // and then invoke Authenticated after
-
+        //GD.Print("Authenticating");
         var waiter = new MessageWaiter<AuthSuccessMessage>(this, allowUnauthenticated: true);
         // DONT use async here
         // we need to invoke set data and invoke _authenticated right away
         // this is because messages received after AuthSuccessMessage (from server) assume the client is now authenticated
         // but if we use async, we wont set Authentication until next update, causing message to be received or dropped (or kicked from Unauthenticated)
         waiter.Callback(AuthenticationSuccessCallback);
+        var data = new CryptoAuthenticator.JoinMessage
+        {
+            CryptoLoginData = ""
+        };
+        //GetNode<CryptoAuthenticator>("/root/Hotel/NetworkClient/Authenticator/CryptoAuthenticator").SendCryptoLogin(this, data.CryptoLoginData);
     }
 
     private void AuthenticationSuccessCallback(NetworkPlayer _, AuthSuccessMessage message)
     {
         if (logger.LogEnabled()) logger.Log($"Authentication successful with {message.AuthenticatorName}");
-
         INetworkAuthenticator authenticator = null;
         // only need to check if server sent its name
         if (!string.IsNullOrEmpty(message.AuthenticatorName))
@@ -266,7 +290,6 @@ public partial class NetworkClient : Node, IMessageSender
 
             authenticator = Authenticator.Authenticators.FirstOrDefault(x => x.AuthenticatorName == message.AuthenticatorName);
         }
-
         Player.SetAuthentication(new PlayerAuthentication(authenticator, null));
         _authenticated.Invoke(Player);
     }
@@ -340,8 +363,8 @@ public partial class NetworkClient : Node, IMessageSender
     {
         if (!Active)
             return;
-
-        World.Time.UpdateFrameTime();
+        //FlecsWorld.Progress();
+        //World.Time.UpdateFrameTime();
         // local connection?
         if (!IsLocalClient && Active && _connectState == ConnectState.Connected)
         {

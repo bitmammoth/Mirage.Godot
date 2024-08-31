@@ -12,6 +12,9 @@ namespace Example2d
     public partial class Manager2d : Node
     {
         [Export] public NetworkManager NetworkManager;
+        [Export] public ServerObjectManager ServerObjectManager;
+        [Export] public NetworkServer Server;
+        [Export] public ClientObjectManager ClientObjectManager;
         [Export] public PackedScene playerPrefab;
         [Export] public int cubeCount = 10;
         [Export] public PackedScene cubePrefab;
@@ -19,7 +22,7 @@ namespace Example2d
         private NetworkIdentity Spawn(PackedScene prefab)
         {
             var clone = prefab.Instantiate();
-            GetTree().Root.AddChild(clone);
+            GetTree().Root.CallDeferred("add_child", clone);
 
             var identity = clone.GetNetworkIdentity();
             identity.PrefabHash = PrefabHashHelper.GetPrefabHash(prefab);
@@ -28,11 +31,11 @@ namespace Example2d
 
         public override void _Ready()
         {
-            NetworkManager.ClientObjectManager.RegisterPrefab(playerPrefab);
-            NetworkManager.ClientObjectManager.RegisterPrefab(cubePrefab);
+            ClientObjectManager.RegisterPrefab(playerPrefab);
+            ClientObjectManager.RegisterPrefab(cubePrefab);
 
-            NetworkManager.Server.Started.AddListener(ServerStarted);
-            NetworkManager.Server.Authenticated += ServerAuthenticated;
+            Server.Started.AddListener(ServerStarted);
+            Server.Authenticated += ServerAuthenticated;
             LogFactory.GetLogger<SyncPositionBehaviourCollection>().filterLogType = LogType.Log;
         }
 
@@ -41,14 +44,14 @@ namespace Example2d
             for (var i = 0; i < cubeCount; i++)
             {
                 var clone = Spawn(cubePrefab);
-                NetworkManager.ServerObjectManager.Spawn(clone);
+                ServerObjectManager.Spawn(clone);
             }
         }
 
         private void ServerAuthenticated(NetworkPlayer player)
         {
             var clone = Spawn(playerPrefab);
-            NetworkManager.ServerObjectManager.AddCharacter(player, clone);
+            ServerObjectManager.AddCharacter(player, clone);
         }
     }
 }

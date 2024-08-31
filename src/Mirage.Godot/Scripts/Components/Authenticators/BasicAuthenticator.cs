@@ -6,7 +6,7 @@ namespace Mirage.Godot.Scripts.Components.Authenticators;
 
 public partial class BasicAuthenticator : NetworkAuthenticator<BasicAuthenticator.JoinMessage>
 {
-    [Export] public string ServerCode;
+    [Export] public required string ServerCode;
 
     // called on server to validate
     protected override AuthenticationResult Authenticate(NetworkPlayer player, JoinMessage message)
@@ -17,7 +17,7 @@ public partial class BasicAuthenticator : NetworkAuthenticator<BasicAuthenticato
     }
 
     // called on client to create message to send to server
-    public void SendCode(NetworkClient client, string serverCode = null)
+    public void SendCode(NetworkClient client, string? serverCode = null)
     {
         var message = new JoinMessage
         {

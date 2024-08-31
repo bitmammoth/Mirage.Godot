@@ -15,7 +15,7 @@ public struct AuthenticationResult
     /// <summary>
     /// Auth data from Success, will be set on NetworkPlayer
     /// </summary>
-    public object Data { get; private set; }
+    public object? Data { get; private set; }
     /// <summary>
     /// Can be reason for Success of fail
     /// </summary>
@@ -30,7 +30,7 @@ public struct AuthenticationResult
             Reason = reason,
         };
     }
-    public static AuthenticationResult CreateSuccess(INetworkAuthenticator authenticator, object data)
+    public static AuthenticationResult CreateSuccess(INetworkAuthenticator authenticator, object? data)
     {
         return new AuthenticationResult
         {

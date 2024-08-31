@@ -246,7 +246,7 @@ public partial class SyncPositionSystem : Node
         // dont send message if no behaviours
         if (Behaviours.Dictionary.Count == 0)
         {
-            GD.Print("ASDSADEAW");
+            //GD.Print("ASDSADEAW");
             return;
         }
 
@@ -258,8 +258,8 @@ public partial class SyncPositionSystem : Node
 
             foreach (var behaviour in dirtySet)
             {
-                if (logger.LogEnabled())
-                    logger.Log($"Time {time:0.000}, Packing {behaviour.Name}");
+                //if (logger.LogEnabled())
+                //    logger.Log($"Time {time:0.000}, Packing {behaviour.Name}");
 
                 packer.PackNext(writer, behaviour);
 

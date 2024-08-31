@@ -7,17 +7,20 @@ namespace Mirage.Godot.Scripts.Components;
 [GlobalClass]
 public partial class CharacterSpawner : Node
 {
-    [Export] public NetworkServer Server;
-    [Export] public ServerObjectManager ServerObjectManager;
+    [Export] public NetworkServer? Server;
+    [Export] public ServerObjectManager? ServerObjectManager;
     [Export] public bool SpawnOnConnect;
-    [Export] public PackedScene Player;
+    [Export] public required PackedScene Player { get; set; }
     private int _spawnOffset;
-
     public override void _Ready()
     {
+        base._Ready();
+        if (Server == null)
+        {
+            return;
+        }
         Server.Authenticated += Server_Authenticated;
     }
-
     private void Server_Authenticated(NetworkPlayer player)
     {
         if (SpawnOnConnect)
@@ -34,12 +37,10 @@ public partial class CharacterSpawner : Node
             {
                 node2d.Position = new Vector2(600, 200);
             }
-
             GetTree().Root.AddChild(clone);
-
             var identity = clone.GetNetworkIdentity();
             identity.PrefabHash = PrefabHashHelper.GetPrefabHash(Player);
-            ServerObjectManager.AddCharacter(player, identity);
+            ServerObjectManager?.AddCharacter(player, identity);
         }
     }
 }

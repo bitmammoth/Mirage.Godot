@@ -17,7 +17,7 @@ namespace Example2d
 
             var x = Input.GetActionStrength("move_right") - Input.GetActionStrength("move_left");
             var z = Input.GetActionStrength("move_back") - Input.GetActionStrength("move_forward");
-
+            GD.Print($"x: {x}, z: {z}");
             var deltaVector = new Vector2(x, z) * _speed * (float)delta;
             var newPos = _root.Position + deltaVector;
 

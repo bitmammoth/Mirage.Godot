@@ -1,39 +1,39 @@
 using System;
 
-namespace Mirage.Godot.Scripts.Components.Authenticators.SessionId;
-
-public interface ISessionIdStore
+namespace Mirage.Godot.Scripts.Components.Authenticators.SessionId
 {
-    bool TryGetSession(out ClientSession session);
-    void StoreSession(ClientSession session);
-}
-
-public class ClientSession
-{
-    public DateTime Timeout;
-    public byte[] Key;
-
-
-    public bool NeedsRefreshing(TimeSpan tillRefresh)
+    public interface ISessionIdStore
     {
-        var timeRemining = DateTime.Now - Timeout;
-
-        return timeRemining < tillRefresh;
-    }
-}
-
-internal class DefaultSessionIdStore : ISessionIdStore
-{
-    private ClientSession _session;
-
-    public void StoreSession(ClientSession session)
-    {
-        _session = session;
+        bool TryGetSession(out ClientSession? session);
+        void StoreSession(ClientSession session);
     }
 
-    public bool TryGetSession(out ClientSession session)
+    public class ClientSession
     {
-        session = _session;
-        return _session != null;
+        public DateTime Timeout { get; set; }
+        public byte[] Key { get; set; } = [];
+
+        public bool NeedsRefreshing(TimeSpan tillRefresh)
+        {
+            var timeRemaining = Timeout - DateTime.Now;
+
+            return timeRemaining < tillRefresh;
+        }
+    }
+
+    internal class DefaultSessionIdStore : ISessionIdStore
+    {
+        private ClientSession? _session;
+
+        public void StoreSession(ClientSession session)
+        {
+            _session = session;
+        }
+
+        public bool TryGetSession(out ClientSession? session)
+        {
+            session = _session;
+            return _session != null;
+        }
     }
 }

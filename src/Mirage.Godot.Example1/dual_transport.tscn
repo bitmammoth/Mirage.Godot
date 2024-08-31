@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://cday24fxou4ey"]
+
+[ext_resource type="Script" path="res://DualTransport.cs" id="1_kfhc3"]
+
+[node name="DualTransport" type="Node"]
+script = ExtResource("1_kfhc3")

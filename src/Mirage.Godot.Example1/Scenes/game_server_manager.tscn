@@ -1,0 +1,46 @@
+[gd_scene load_steps=10 format=3 uid="uid://dnxcay6jtvpae"]
+
+[ext_resource type="Script" path="res://Mirage.Godot/Scripts/Components/DebugNetworkManager.cs" id="1_g23nk"]
+[ext_resource type="Script" path="res://Mirage.Godot/Scripts/NetworkServer.cs" id="2_yspo8"]
+[ext_resource type="Script" path="res://Mirage.Godot/Scripts/Objects/ServerObjectManager.cs" id="3_p1f5v"]
+[ext_resource type="Script" path="res://Mirage.Godot/Scripts/NetworkClient.cs" id="4_crrpx"]
+[ext_resource type="Script" path="res://Mirage.Godot/Scripts/Objects/ClientObjectManager.cs" id="5_nmxq1"]
+[ext_resource type="PackedScene" uid="uid://nea4bwm2wwpj" path="res://Prefabs/Player.tscn" id="6_gu1ct"]
+[ext_resource type="PackedScene" uid="uid://casfcv0sbio2i" path="res://Prefabs/Mob.tscn" id="7_6gxwf"]
+[ext_resource type="PackedScene" uid="uid://d3g3tl662iye2" path="res://Prefabs/Player2d.tscn" id="8_7sdu5"]
+[ext_resource type="Script" path="res://Mirage.Godot/Scripts/Udp/UdpSocketFactory.cs" id="9_wjum1"]
+
+[node name="GameServerManager" type="Node" node_paths=PackedStringArray("Server", "ServerObjectManager", "Client", "ClientObjectManager", "SocketFactory")]
+script = ExtResource("1_g23nk")
+Server = NodePath("GameServer")
+ServerObjectManager = NodePath("GameServerObjectManager")
+MaxConnections = 100
+Client = NodePath("AuthClient")
+ClientObjectManager = NodePath("AuthClientObjectManager")
+SocketFactory = NodePath("GameServerUdpSocketFactory")
+EnableAllLogs = true
+
+[node name="GameServer" type="Node" parent="." node_paths=PackedStringArray("SocketFactory", "ObjectManager")]
+script = ExtResource("2_yspo8")
+SocketFactory = NodePath("../GameServerUdpSocketFactory")
+ObjectManager = NodePath("../GameServerObjectManager")
+
+[node name="GameServerObjectManager" type="Node" parent="."]
+script = ExtResource("3_p1f5v")
+
+[node name="AuthClient" type="Node" parent="." node_paths=PackedStringArray("SocketFactory", "ObjectManager")]
+script = ExtResource("4_crrpx")
+SocketFactory = NodePath("../AuthClientUdpSocketFactory")
+ObjectManager = NodePath("../AuthClientObjectManager")
+
+[node name="AuthClientObjectManager" type="Node" parent="."]
+script = ExtResource("5_nmxq1")
+PackedScenes = Array[PackedScene]([ExtResource("6_gu1ct"), ExtResource("7_6gxwf"), ExtResource("8_7sdu5")])
+
+[node name="GameServerUdpSocketFactory" type="Node" parent="."]
+script = ExtResource("9_wjum1")
+Port = 9003
+
+[node name="AuthClientUdpSocketFactory" type="Node" parent="."]
+script = ExtResource("9_wjum1")
+Port = 9002

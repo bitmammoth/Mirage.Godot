@@ -14,8 +14,9 @@ script = ExtResource("1_ivcl6")
 [node name="SyncPositionBehaviour" type="Node" parent="."]
 script = ExtResource("2_guhnv")
 
-[node name="MovePlayer2d" type="Node" parent="."]
+[node name="MovePlayer2d" type="Node" parent="." node_paths=PackedStringArray("_root")]
 script = ExtResource("3_c5717")
+_root = NodePath("..")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 scale = Vector2(30, 30)

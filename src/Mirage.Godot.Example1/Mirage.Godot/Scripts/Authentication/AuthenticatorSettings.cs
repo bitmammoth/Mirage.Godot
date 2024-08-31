@@ -18,7 +18,7 @@ public sealed partial class AuthenticatorSettings : Node
     public bool RequireHostToAuthenticate;
 
     [Export(hintString: "List of Authenticators allowed, User can use any of them")]
-    public NetworkAuthenticator[] Authenticators = new NetworkAuthenticator[0];
+    public NetworkAuthenticator[] Authenticators = [];
 
     private readonly Dictionary<NetworkPlayer, TaskCompletionSource<AuthenticationResult>> _pending = [];
 

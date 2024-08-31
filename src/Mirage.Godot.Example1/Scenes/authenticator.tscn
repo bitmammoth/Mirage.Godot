@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3 uid="uid://od34qnac3732"]
+
+[ext_resource type="Script" path="res://Mirage.Godot/Scripts/Authentication/AuthenticatorSettings.cs" id="1_xl5mi"]
+[ext_resource type="Script" path="res://Scripts/CryptoAuthenticator.cs" id="2_ttg7y"]
+
+[node name="Authenticator" type="Node" node_paths=PackedStringArray("Authenticators")]
+script = ExtResource("1_xl5mi")
+RequireHostToAuthenticate = true
+Authenticators = [null]
+
+[node name="CryptoAuthenticator" type="Node" parent="."]
+script = ExtResource("2_ttg7y")

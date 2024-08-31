@@ -10,16 +10,16 @@ public partial class NetworkManager : Node
 {
     private static readonly ILogger logger = LogFactory.GetLogger<NetworkManager>();
 
-    [Export] public NetworkServer Server;
-    [Export] public ServerObjectManager ServerObjectManager;
-    [Export] public int MaxConnections;
+    [Export] public NetworkServer? Server { get; set; }
+    [Export] public ServerObjectManager? ServerObjectManager { get; set; }
+    [Export] public int MaxConnections { get; set; }
 
-    [Export] public NetworkClient Client;
-    [Export] public ClientObjectManager ClientObjectManager;
+    [Export] public NetworkClient? Client { get; set; }
+    [Export] public ClientObjectManager? ClientObjectManager { get; set; }
 
-    [Export] public SocketFactory SocketFactory;
-    [Export] public bool EnableAllLogs;
-    [Export] public NetworkScene NetworkScene;
+    [Export] public required SocketFactory SocketFactory { get; set; }
+    [Export] public bool EnableAllLogs { get; set; }
+    [Export] public NetworkScene? NetworkScene { get; set; }
 
     public override void _Ready()
     {
@@ -30,41 +30,48 @@ public partial class NetworkManager : Node
     public virtual void StartServer()
     {
         logger.Log("Starting Server Mode");
-        Server.PeerConfig ??= new Config { MaxConnections = MaxConnections };
-        Server.StartServer();
+        if ((Server?.PeerConfig) == null)
+        {
+            Server!.PeerConfig = new Config { MaxConnections = MaxConnections };
+        }
+        Server?.StartServer();
     }
 
     public virtual void StartClient()
     {
         logger.Log("Starting Client Mode");
-        Client.Connect();
+        Client?.Connect();
     }
 
     public virtual void StartHost()
     {
         logger.Log("Starting Host Mode");
-        Server.StartServer(Client);
+        Server?.StartServer(Client ?? new NetworkClient());
     }
 
     public void Stop()
     {
-        if (Server.Active)
+        if (Server is { Active: true })
+        {
             Server.Stop();
-        if (Client.Active)
+        }
+        if (Client is { Active: true })
+        {
             Client.Disconnect();
+        }
     }
 
-    // Called every frame. 'delta' is the elapsed time since the previous frame.
     public override void _Process(double delta)
     {
-        if (Server.Active)
+        if (Server is { Active: true })
+        {
             Server.UpdateReceive();
-        if (Client.Active)
-            Client.UpdateReceive();
-
-        if (Server.Active)
             Server.UpdateSent();
-        if (Client.Active)
+        }
+        if (Client is { Active: true })
+        {
+            Client.UpdateReceive();
             Client.UpdateSent();
+        }
     }
 }

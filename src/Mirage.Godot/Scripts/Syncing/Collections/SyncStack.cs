@@ -133,7 +133,7 @@ public class SyncStack<T> : IReadOnlyCollection<T>, IEnumerable<T>, ISyncObject
         }
     }
 
-    private static T[] _temp = Array.Empty<T>();
+    private static T[] _temp = [];
     public void OnDeserializeAll(NetworkReader reader)
     {
         // if init,  write the full list content

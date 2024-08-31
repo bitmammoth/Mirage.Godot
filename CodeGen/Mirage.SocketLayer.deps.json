@@ -16,7 +16,10 @@
       },
       "Mirage.Logging/1.0.0": {
         "runtime": {
-          "Mirage.Logging.dll": {}
+          "Mirage.Logging.dll": {
+            "assemblyVersion": "1.0.0",
+            "fileVersion": "0.0.0.0"
+          }
         }
       }
     }

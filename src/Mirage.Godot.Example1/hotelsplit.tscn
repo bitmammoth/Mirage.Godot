@@ -1,0 +1,83 @@
+[gd_scene load_steps=15 format=3 uid="uid://607skafyqqdw"]
+
+[ext_resource type="PackedScene" uid="uid://da0mruqtcrc8v" path="res://Scenes/network_server.tscn" id="2_lvg31"]
+[ext_resource type="Script" path="res://Mirage.Godot/Scripts/Authentication/AuthenticatorSettings.cs" id="3_2d50t"]
+[ext_resource type="Script" path="res://Scripts/CryptoAuthenticator.cs" id="4_pmv14"]
+[ext_resource type="Script" path="res://Mirage.Godot/Scripts/NetworkScene.cs" id="5_ppicx"]
+[ext_resource type="Script" path="res://Mirage.Godot/Scripts/NetworkClient.cs" id="6_wtt5p"]
+[ext_resource type="Script" path="res://Mirage.Godot/Scripts/Objects/ClientObjectManager.cs" id="7_ocj5u"]
+[ext_resource type="PackedScene" uid="uid://nea4bwm2wwpj" path="res://Prefabs/Player.tscn" id="8_3noti"]
+[ext_resource type="PackedScene" uid="uid://casfcv0sbio2i" path="res://Prefabs/Mob.tscn" id="9_skrwt"]
+[ext_resource type="PackedScene" uid="uid://d3g3tl662iye2" path="res://Prefabs/Player2d.tscn" id="10_c2fv1"]
+[ext_resource type="Script" path="res://Mirage.Godot/Scripts/Udp/UdpSocketFactory.cs" id="11_af3x5"]
+[ext_resource type="Script" path="res://Example2d/Scripts/Manager2d.cs" id="12_406gc"]
+[ext_resource type="PackedScene" uid="uid://bg0p7ddm0edm" path="res://Example2d/Prefabs/Player2d.tscn" id="13_avc1i"]
+[ext_resource type="PackedScene" uid="uid://cvi6cc3gurby7" path="res://Example2d/Prefabs/Cube2d.tscn" id="14_1x1k8"]
+[ext_resource type="Script" path="res://NetworkPositionSync/SyncPositionSystem.cs" id="15_36yfu"]
+
+[node name="Hotel" type="Node2D"]
+
+[node name="Camera2D" type="Camera2D" parent="."]
+
+[node name="NetworkServer" parent="." node_paths=PackedStringArray("SocketFactory", "ObjectManager", "Authenticator") instance=ExtResource("2_lvg31")]
+SocketFactory = NodePath("UdpSocketFactory")
+ObjectManager = NodePath("ServerObjectManager")
+Authenticator = NodePath("../NetworkClient/Authenticator")
+
+[node name="Authenticator" type="Node" parent="NetworkServer" node_paths=PackedStringArray("Authenticators")]
+script = ExtResource("3_2d50t")
+RequireHostToAuthenticate = true
+Authenticators = [NodePath("CryptoAuthenticator")]
+
+[node name="CryptoAuthenticator" type="Node" parent="NetworkServer/Authenticator"]
+script = ExtResource("4_pmv14")
+
+[node name="NetworkScene" type="Node" parent="NetworkServer" node_paths=PackedStringArray("_sceneObjects")]
+script = ExtResource("5_ppicx")
+_sceneObjects = []
+
+[node name="SyncPositionSystem" type="Node" parent="NetworkServer" node_paths=PackedStringArray("Client", "Server")]
+script = ExtResource("15_36yfu")
+Client = NodePath("")
+Server = NodePath("")
+
+[node name="NetworkClient" type="Node" parent="." node_paths=PackedStringArray("SocketFactory", "ObjectManager", "Authenticator")]
+script = ExtResource("6_wtt5p")
+SocketFactory = NodePath("UdpSocketFactory")
+ObjectManager = NodePath("ClientObjectManager")
+Authenticator = NodePath("Authenticator")
+
+[node name="ClientObjectManager" type="Node" parent="NetworkClient"]
+script = ExtResource("7_ocj5u")
+PackedScenes = Array[PackedScene]([ExtResource("8_3noti"), ExtResource("9_skrwt"), ExtResource("10_c2fv1")])
+
+[node name="UdpSocketFactory" type="Node" parent="NetworkClient"]
+script = ExtResource("11_af3x5")
+
+[node name="Authenticator" type="Node" parent="NetworkClient" node_paths=PackedStringArray("Authenticators")]
+script = ExtResource("3_2d50t")
+RequireHostToAuthenticate = true
+Authenticators = [NodePath("CryptoAuthenticator")]
+
+[node name="CryptoAuthenticator" type="Node" parent="NetworkClient/Authenticator"]
+script = ExtResource("4_pmv14")
+
+[node name="NetworkScene" type="Node" parent="NetworkClient" node_paths=PackedStringArray("_sceneObjects")]
+script = ExtResource("5_ppicx")
+_sceneObjects = []
+
+[node name="SyncPositionSystem" type="Node" parent="NetworkClient" node_paths=PackedStringArray("Client", "Server")]
+script = ExtResource("15_36yfu")
+Client = NodePath("")
+Server = NodePath("")
+
+[node name="Manager2d" type="Node" parent="." node_paths=PackedStringArray("NetworkManager", "ServerObjectManager", "Server", "ClientObjectManager")]
+script = ExtResource("12_406gc")
+NetworkManager = NodePath("")
+ServerObjectManager = NodePath("../NetworkServer/ServerObjectManager")
+Server = NodePath("../NetworkServer")
+ClientObjectManager = NodePath("../NetworkClient/ClientObjectManager")
+playerPrefab = ExtResource("13_avc1i")
+cubePrefab = ExtResource("14_1x1k8")
+
+[editable path="NetworkServer"]

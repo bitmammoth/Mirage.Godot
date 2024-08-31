@@ -133,9 +133,14 @@ public partial class NetworkServer : Node
     /// Set to true if you want to manually call <see cref="UpdateReceive"/> and <see cref="UpdateSent"/> and stop mirage from automatically calling them
     /// </summary>
     public bool ManualUpdate = false;
-
+    public override void _Ready()
+    {
+        base._Ready();
+        //StartServer();
+    }
     public override void _ExitTree()
     {
+        base._ExitTree();
         // if gameobject with server on is destroyed, stop the server
         if (Active)
             Stop();
@@ -262,6 +267,7 @@ public partial class NetworkServer : Node
             if (logger.LogEnabled()) logger.Log("NetworkServer StartHost");
             Authenticate(LocalPlayer);
         }
+        GD.Print("Server started");
     }
 
     private void ThrowIfActive()

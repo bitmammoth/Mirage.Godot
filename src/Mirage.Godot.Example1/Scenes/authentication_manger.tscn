@@ -1,0 +1,41 @@
+[gd_scene load_steps=5 format=3 uid="uid://d0lsqx10xwtug"]
+
+[ext_resource type="Script" path="res://Mirage.Godot/Scripts/Components/DualNetworkManager.cs" id="1_ft23t"]
+[ext_resource type="Script" path="res://Mirage.Godot/Scripts/NetworkServer.cs" id="2_uqwmp"]
+[ext_resource type="Script" path="res://Mirage.Godot/Scripts/Objects/ServerObjectManager.cs" id="3_372d5"]
+[ext_resource type="Script" path="res://Mirage.Godot/Scripts/Udp/UdpSocketFactory.cs" id="9_l4wbq"]
+
+[node name="AuthenticationManger" type="Node" node_paths=PackedStringArray("Server1", "Server2", "ObjectManager1", "ObjectManager2", "SocketFactory1", "SocketFactory2")]
+script = ExtResource("1_ft23t")
+Server1 = NodePath("GatewayAuthServer")
+Server2 = NodePath("GameAuthServer")
+ObjectManager1 = NodePath("GatewayServerObjectManager")
+ObjectManager2 = NodePath("GameServerObjectManager")
+SocketFactory1 = NodePath("GatewayAuthUdpSocketFactory")
+SocketFactory2 = NodePath("GameAuthUdpSocketFactory")
+IsServer = true
+MaxConnections = 100
+
+[node name="GatewayAuthServer" type="Node" parent="." node_paths=PackedStringArray("SocketFactory", "ObjectManager")]
+script = ExtResource("2_uqwmp")
+SocketFactory = NodePath("../GatewayAuthUdpSocketFactory")
+ObjectManager = NodePath("../GatewayServerObjectManager")
+
+[node name="GameAuthServer" type="Node" parent="." node_paths=PackedStringArray("SocketFactory", "ObjectManager")]
+script = ExtResource("2_uqwmp")
+SocketFactory = NodePath("../GameAuthUdpSocketFactory")
+ObjectManager = NodePath("../GameServerObjectManager")
+
+[node name="GatewayServerObjectManager" type="Node" parent="."]
+script = ExtResource("3_372d5")
+
+[node name="GameServerObjectManager" type="Node" parent="."]
+script = ExtResource("3_372d5")
+
+[node name="GatewayAuthUdpSocketFactory" type="Node" parent="."]
+script = ExtResource("9_l4wbq")
+Port = 9001
+
+[node name="GameAuthUdpSocketFactory" type="Node" parent="."]
+script = ExtResource("9_l4wbq")
+Port = 9002

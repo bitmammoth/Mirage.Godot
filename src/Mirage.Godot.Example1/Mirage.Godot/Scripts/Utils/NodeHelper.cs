@@ -28,9 +28,20 @@ internal static class NodeHelper
     }
     public static T GetFirstChild<T>(this Node node)
     {
+        if(node == null)
+            GD.Print($"node is null");
         var children = node.GetChildren();
+        if (children == null)
+            GD.Print($"children is null");
+        GD.Print($"children: {children}");
         var ofType = children.OfType<T>();
+        if (ofType == null)
+            GD.Print($"ofType is null");
+        GD.Print($"ofType: {ofType}");
         var first = ofType.FirstOrDefault();
+        if (first == null)
+            GD.Print($"first is null");
+        GD.Print($"first: {first}");
         return first;
     }
     public static bool TryGetSibling<T>(this Node node, out T result)
