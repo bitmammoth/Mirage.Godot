@@ -237,6 +237,9 @@ _pkginfo.txt
 
 # Others
 ClientBin/
+*.sln
+CodeGen/
+src/Mirage.Godot.Example1/NetworkPositionSync/
 ~$*
 *~
 *.dbmdl
