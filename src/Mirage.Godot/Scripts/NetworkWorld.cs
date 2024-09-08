@@ -10,7 +10,7 @@ namespace Mirage
     /// </summary>
     /// <param name="hasAuthority">if the owner now has authority or if it was removed</param>
     /// <param name="owner">the new or old owner. Owner value might be null on client side. But will be set on server</param>
-    public delegate void AuthorityChanged(NetworkIdentity identity, bool hasAuthority, NetworkPlayer owner);
+    public delegate void AuthorityChanged(NetworkIdentity identity, bool hasAuthority, INetworkPlayer owner);
 
     /// <summary>
     /// Holds collection of spawned network objects
@@ -139,7 +139,7 @@ namespace Mirage
             _spawnedObjects.Clear();
         }
 
-        internal void InvokeOnAuthorityChanged(NetworkIdentity identity, bool hasAuthority, NetworkPlayer owner)
+        internal void InvokeOnAuthorityChanged(NetworkIdentity identity, bool hasAuthority, INetworkPlayer owner)
         {
             OnAuthorityChanged?.Invoke(identity, hasAuthority, owner);
         }

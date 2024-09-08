@@ -1,3 +1,4 @@
+using System;
 using Godot;
 using Mirage;
 using Mirage.Logging;
@@ -20,6 +21,14 @@ namespace Example1
         // used to check generic dictionary writer works
         private Godot.Collections.Dictionary<string, int> example_dictionary;
 
+        [SyncVar(hook = nameof(OnTestVarChanged))]
+        private int testVar = 0;
+
+        private void OnTestVarChanged()
+        {
+            GD.Print("testVar changed to: " + testVar);
+        }
+
 
         private Vector3 _targetVelocity = Vector3.Zero;
         private CharacterBody3D _body;
@@ -31,17 +40,29 @@ namespace Example1
 
         public override void _PhysicsProcess(double delta)
         {
-            if (this.HasAuthority())
+            if (this.Identity.HasAuthority)
             {
+                try{
                 var direction = GetInput();
 
                 // update direction even if not authority
                 if (direction != Vector3.Zero)
+                {
+                    GD.Print("direction: " + direction);
+                    GD.Print("Speed: " + Speed);
+                    GD.Print("FallAcceleration: " + FallAcceleration);
+                    GD.Print("lookAngle: " + lookAngle);
                     lookAngle = GetAngle(direction);
+                    testVar++;
 
+                }
                 _targetVelocity.X = direction.X * Speed;
                 _targetVelocity.Z = direction.Z * Speed;
-
+                }catch(System.Exception e){
+                    logger.LogError(e.ToString());
+                    //get stack trace
+                    logger.LogError(e.StackTrace);
+                }
                 if (!_body.IsOnFloor())
                 {
                     _targetVelocity.Y -= FallAcceleration * (float)delta;
@@ -64,6 +85,7 @@ namespace Example1
             direction.Y = 0;
             direction = direction.Normalized();
             var angle = direction.SignedAngleTo(Vector3.Forward, Vector3.Down);
+            GD.Print("angle: " + angle);
             return angle;
         }
 

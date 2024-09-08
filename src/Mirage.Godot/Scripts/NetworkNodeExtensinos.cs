@@ -8,7 +8,7 @@ namespace Mirage
     /// </summary>
     public static class NetworkNodeExtensions
     {
-        // todo decide which of these should be extension methods vs static only
+        /*// todo decide which of these should be extension methods vs static only
         public static bool IsServer(this INetworkNode node) => node.Identity.IsServer;
         public static bool IsClient(this INetworkNode node) => node.Identity.IsClient;
         public static bool HasAuthority(this INetworkNode node) => node.Identity.HasAuthority;
@@ -30,5 +30,6 @@ namespace Mirage
         public static bool GetSyncVarHookGuard(NetworkBehaviour behaviour, ulong bitMask) => behaviour.NetworkNodeSyncVars?.GetSyncVarHookGuard(bitMask) ?? true;
         public static void SetSyncVarHookGuard(NetworkBehaviour behaviour, ulong bitMask, bool value) => behaviour.NetworkNodeSyncVars?.SetSyncVarHookGuard(bitMask, value);
         public static bool SyncVarEqual<T>(T value, T fieldValue) => EqualityComparer<T>.Default.Equals(value, fieldValue);
+    */
     }
 }

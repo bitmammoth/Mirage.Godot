@@ -56,7 +56,7 @@ namespace Mirage.Weaver
         }
 
 
-        /// <summary>
+                /// <summary>
         /// Generates a skeleton for a ServerRpc
         /// </summary>
         /// <param name="td"></param>
@@ -83,9 +83,9 @@ namespace Mirage.Weaver
                 MethodAttributes.Family | MethodAttributes.HideBySig | MethodAttributes.Static,
                 userCodeFunc.ReturnType);
 
-            _ = rpc.AddParam<INetworkNode>("behaviour");
+            _ = rpc.AddParam<NetworkBehaviour>("behaviour");
             var readerParameter = rpc.AddParam<NetworkReader>("reader");
-            var senderParameter = rpc.AddParam<NetworkPlayer>("senderConnection");
+            var senderParameter = rpc.AddParam<INetworkPlayer>("senderConnection");
             _ = rpc.AddParam<int>("replyId");
 
 
@@ -101,14 +101,15 @@ namespace Mirage.Weaver
             {
                 // NetworkConnection parameter is only required for RpcTarget.Player
                 var target = clientRpcAttr.GetField(nameof(ClientRpcAttribute.target), RpcTarget.Observers);
-                hasNetworkConnection = target == RpcTarget.Player && HasFirstParameter<NetworkPlayer>(method);
+                hasNetworkConnection = target == RpcTarget.Player && HasFirstParameter<INetworkPlayer>(method);
 
                 if (hasNetworkConnection)
                 {
                     // this is called in the skeleton (the client)
                     // the client should just get the connection to the server and pass that in
                     worker.Append(worker.Create(OpCodes.Ldarg_0));
-                    worker.Append(worker.Create(OpCodes.Call, () => NetworkNodeExtensions.GetClientPlayer(default)));
+                    worker.Append(worker.Create(OpCodes.Call, (NetworkBehaviour nb) => nb.Client));
+                    worker.Append(worker.Create(OpCodes.Callvirt, (NetworkClient nb) => nb.Player));
                 }
             }
 
@@ -145,7 +146,7 @@ namespace Mirage.Weaver
             var error = false;
             for (var i = 0; i < method.Parameters.Count; i++)
             {
-                if (method.Parameters[i].ParameterType.Is<NetworkPlayer>())
+                if (method.Parameters[i].ParameterType.Is<INetworkPlayer>())
                     continue;
 
                 try
@@ -198,13 +199,13 @@ namespace Mirage.Weaver
         private static bool ClientRpcWithTarget(MethodDefinition method, RemoteCallType callType)
         {
             return (callType == RemoteCallType.ClientRpc)
-                && HasFirstParameter<NetworkPlayer>(method);
+                && HasFirstParameter<INetworkPlayer>(method);
         }
 
         private void WriteArgument(ILProcessor worker, VariableDefinition writer, ParameterDefinition param, ValueSerializer serializer)
         {
             // dont write anything for NetworkPlayer, it is either target or sender
-            if (param.ParameterType.Is<NetworkPlayer>())
+            if (param.ParameterType.Is<INetworkPlayer>())
                 return;
 
             serializer.AppendWriteParameter(module, worker, writer, param);
@@ -229,7 +230,7 @@ namespace Mirage.Weaver
 
         private void ReadArgument(ILProcessor worker, ParameterDefinition readerParameter, ParameterDefinition senderParameter, ParameterDefinition param, ValueSerializer serializer)
         {
-            if (param.ParameterType.Is<NetworkPlayer>())
+            if (param.ParameterType.Is<INetworkPlayer>())
             {
                 if (senderParameter != null)
                 {
@@ -320,7 +321,7 @@ namespace Mirage.Weaver
                 throw new RpcException($"{method.Name} cannot have out parameters", method);
             }
 
-            if (param.ParameterType.Is<NetworkPlayer>())
+            if (param.ParameterType.Is<INetworkPlayer>())
             {
                 if (callType == RemoteCallType.ClientRpc && firstParam)
                 {

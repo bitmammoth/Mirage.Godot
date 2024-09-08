@@ -10,13 +10,12 @@ namespace Mirage
         [Export] public bool SpawnOnConnect;
         [Export] public PackedScene Player;
         private int spawnOffset;
-
         public override void _Ready()
         {
             Server.Authenticated += Server_Authenticated;
         }
 
-        private void Server_Authenticated(NetworkPlayer player)
+        private void Server_Authenticated(INetworkPlayer player)
         {
             if (SpawnOnConnect)
             {

@@ -115,7 +115,7 @@ namespace Mirage
 
         private static void SendToRemoteOwner(NetworkIdentity identity, PooledNetworkWriter ownerWriter, UpdateVarsMessage varsMessage)
         {
-            NetworkPlayer player;
+            INetworkPlayer player;
 
             if (identity.IsServer)
             {

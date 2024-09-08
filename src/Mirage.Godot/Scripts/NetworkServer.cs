@@ -60,17 +60,17 @@ namespace Mirage
         /// Is invoked after a connection fully connects to the server
         /// <para>For most use cases use <see cref="Authenticated"/> instead.</para>
         /// </summary>
-        public event Action<NetworkPlayer> Connected;
+        public event Action<INetworkPlayer> Connected;
 
         /// <summary>
         /// Event fires once a new Client has passed Authentication to the Server.
         /// </summary>
-        public event Action<NetworkPlayer> Authenticated;
+        public event Action<INetworkPlayer> Authenticated;
 
         /// <summary>
         /// Event fires once a Client has Disconnected from the Server.
         /// </summary>
-        public event Action<NetworkPlayer> Disconnected;
+        public event Action<INetworkPlayer> Disconnected;
 
         private AddLateEvent _stopped = new AddLateEvent();
         public IAddLateEvent Stopped => _stopped;
@@ -94,7 +94,7 @@ namespace Mirage
         // original HLAPI has .localConnections list with only m_LocalConnection in it
         // (for backwards compatibility because they removed the real localConnections list a while ago)
         // => removed it for easier code. use .localConnection now!
-        public NetworkPlayer LocalPlayer { get; private set; }
+        public INetworkPlayer LocalPlayer { get; private set; }
 
         /// <summary>
         /// The host client for this server 
@@ -104,14 +104,19 @@ namespace Mirage
         /// <summary>
         /// True if there is a local client connected to this server (host mode)
         /// </summary>
-        public bool LocalClientActive => LocalClient != null && LocalClient.Active;
+        [System.Obsolete("use IsHost instead")]
+        public bool LocalClientActive => IsHost;
+        /// <summary>
+        /// True if there is a local client connected to this server (host mode)
+        /// </summary>
+        public bool IsHost => LocalClient != null && LocalClient.Active;
 
         /// <summary>
         /// A list of local connections on the server.
         /// </summary>
-        public IReadOnlyCollection<NetworkPlayer> Players => _connections.Values;
+        public IReadOnlyCollection<INetworkPlayer> Players => _connections.Values;
 
-        private readonly Dictionary<IConnection, NetworkPlayer> _connections = new Dictionary<IConnection, NetworkPlayer>();
+        private readonly Dictionary<IConnection, INetworkPlayer> _connections = new Dictionary<IConnection, INetworkPlayer>();
 
         /// <summary>
         /// <para>Checks if the server has been started.</para>
@@ -313,7 +318,7 @@ namespace Mirage
             Authenticate(player);
         }
 
-        private void Authenticate(NetworkPlayer player)
+        private void Authenticate(INetworkPlayer player)
         {
             // authenticate player
             if (Authenticator != null)
@@ -322,7 +327,7 @@ namespace Mirage
                 AuthenticationSuccess(player, AuthenticationResult.CreateSuccess("No Authenticators"));
         }
 
-        private async Task AuthenticateAsync(NetworkPlayer player)
+        private async Task AuthenticateAsync(INetworkPlayer player)
         {
             var result = await Authenticator.ServerAuthenticate(player);
 
@@ -338,7 +343,7 @@ namespace Mirage
             }
         }
 
-        private void AuthenticationSuccess(NetworkPlayer player, AuthenticationResult result)
+        private void AuthenticationSuccess(INetworkPlayer player, AuthenticationResult result)
         {
             player.SetAuthentication(new PlayerAuthentication(result.Authenticator, result.Data));
 
@@ -371,7 +376,7 @@ namespace Mirage
         /// This removes an external connection.
         /// </summary>
         /// <param name="connectionId">The id of the connection to remove.</param>
-        private void RemoveConnection(NetworkPlayer player)
+        private void RemoveConnection(INetworkPlayer player)
         {
             _connections.Remove(player.Connection);
         }
@@ -407,11 +412,11 @@ namespace Mirage
             SendToMany(enumerator, msg, excludeLocalPlayer, channelId);
         }
 
-        public void SendToMany<T>(IReadOnlyList<NetworkPlayer> players, T msg, bool excludeLocalPlayer, Channel channelId = Channel.Reliable)
+        public void SendToMany<T>(IReadOnlyList<INetworkPlayer> players, T msg, bool excludeLocalPlayer, Channel channelId = Channel.Reliable)
         {
             if (excludeLocalPlayer)
             {
-                using (var list = AutoPool<List<NetworkPlayer>>.Take())
+                using (var list = AutoPool<List<INetworkPlayer>>.Take())
                 {
                     ListHelper.AddToList(list, players, LocalPlayer);
                     NetworkServer.SendToMany(list, msg, channelId);
@@ -431,9 +436,9 @@ namespace Mirage
         /// <param name="msg"></param>
         /// <param name="excludeLocalPlayer"></param>
         /// <param name="channelId"></param>
-        public void SendToMany<T>(IEnumerable<NetworkPlayer> players, T msg, bool excludeLocalPlayer, Channel channelId = Channel.Reliable)
+        public void SendToMany<T>(IEnumerable<INetworkPlayer> players, T msg, bool excludeLocalPlayer, Channel channelId = Channel.Reliable)
         {
-            using (var list = AutoPool<List<NetworkPlayer>>.Take())
+            using (var list = AutoPool<List<INetworkPlayer>>.Take())
             {
                 ListHelper.AddToList(list, players, excludeLocalPlayer ? LocalPlayer : null);
                 NetworkServer.SendToMany(list, msg, channelId);
@@ -443,9 +448,9 @@ namespace Mirage
         /// use to avoid allocation of IEnumerator
         /// </summary>
         public void SendToMany<T, TEnumerator>(TEnumerator playerEnumerator, T msg, bool excludeLocalPlayer, Channel channelId = Channel.Reliable)
-            where TEnumerator : struct, IEnumerator<NetworkPlayer>
+            where TEnumerator : struct, IEnumerator<INetworkPlayer>
         {
-            using (var list = AutoPool<List<NetworkPlayer>>.Take())
+            using (var list = AutoPool<List<INetworkPlayer>>.Take())
             {
                 ListHelper.AddToList(list, playerEnumerator, excludeLocalPlayer ? LocalPlayer : null);
                 NetworkServer.SendToMany(list, msg, channelId);
@@ -458,7 +463,7 @@ namespace Mirage
             if (observers.Count == 0)
                 return;
 
-            using (var list = AutoPool<List<NetworkPlayer>>.Take())
+            using (var list = AutoPool<List<INetworkPlayer>>.Take())
             {
                 var enumerator = observers.GetEnumerator();
                 ListHelper.AddToList(list, enumerator, excludeLocalPlayer ? LocalPlayer : null, excludeOwner ? identity.Owner : null);
@@ -472,14 +477,14 @@ namespace Mirage
         /// </summary>
         // need explicity List function here, so that implicit casts to List from wrapper works
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void SendToMany<T>(List<NetworkPlayer> players, T msg, Channel channelId = Channel.Reliable)
-            => SendToMany((IReadOnlyList<NetworkPlayer>)players, msg, channelId);
+        public static void SendToMany<T>(List<INetworkPlayer> players, T msg, Channel channelId = Channel.Reliable)
+            => SendToMany((IReadOnlyList<INetworkPlayer>)players, msg, channelId);
 
         /// <summary>
         /// Sends to list of players.
         /// <para>All other SendTo... functions call this, it dooes not do any extra checks, just serializes message if not empty, then sends it</para>
         /// </summary>
-        public static void SendToMany<T>(IReadOnlyList<NetworkPlayer> players, T msg, Channel channelId = Channel.Reliable)
+        public static void SendToMany<T>(IReadOnlyList<INetworkPlayer> players, T msg, Channel channelId = Channel.Reliable)
         {
             // avoid serializing when list is empty
             if (players.Count == 0)
@@ -504,7 +509,7 @@ namespace Mirage
         }
 
         //called once a client disconnects from the server
-        private void OnDisconnected(NetworkPlayer player)
+        private void OnDisconnected(INetworkPlayer player)
         {
             if (logger.LogEnabled()) logger.Log("Server disconnect client:" + player);
 
@@ -529,9 +534,9 @@ namespace Mirage
         private sealed class DataHandler : IDataHandler
         {
             private readonly IMessageReceiver _messageHandler;
-            private readonly Dictionary<IConnection, NetworkPlayer> _players;
+            private readonly Dictionary<IConnection, INetworkPlayer> _players;
 
-            public DataHandler(IMessageReceiver messageHandler, Dictionary<IConnection, NetworkPlayer> connections)
+            public DataHandler(IMessageReceiver messageHandler, Dictionary<IConnection, INetworkPlayer> connections)
             {
                 _messageHandler = messageHandler;
                 _players = connections;

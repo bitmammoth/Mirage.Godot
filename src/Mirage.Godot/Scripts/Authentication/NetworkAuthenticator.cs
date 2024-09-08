@@ -12,7 +12,7 @@ namespace Mirage.Authentication
     {
         public virtual string AuthenticatorName => GetType().Name;
 
-        internal abstract void Setup(MessageHandler messageHandler, Action<NetworkPlayer, AuthenticationResult> afterAuth);
+        internal abstract void Setup(MessageHandler messageHandler, Action<INetworkPlayer, AuthenticationResult> afterAuth);
     }
 
 }

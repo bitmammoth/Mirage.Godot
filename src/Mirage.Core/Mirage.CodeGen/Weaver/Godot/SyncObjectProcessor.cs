@@ -126,7 +126,8 @@ namespace Mirage.Weaver
             worker.Append(worker.Create(OpCodes.Ldarg_0));
             worker.Append(worker.Create(OpCodes.Ldfld, fd));
 
-            worker.Append(worker.Create(OpCodes.Call, () => NetworkNodeExtensions.InitSyncObject(default, default)));
+            var initSyncObjectRef = worker.Body.Method.Module.ImportReference<NetworkBehaviour>(nb => nb.InitSyncObject(default));
+            worker.Append(worker.Create(OpCodes.Call, initSyncObjectRef));
         }
     }
 }

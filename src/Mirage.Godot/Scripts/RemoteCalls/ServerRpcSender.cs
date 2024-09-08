@@ -9,7 +9,7 @@ namespace Mirage.RemoteCalls
     /// </summary>
     public static class ServerRpcSender
     {
-        public static void Send(INetworkNode behaviour, int relativeIndex, NetworkWriter writer, Channel channelId, bool requireAuthority)
+        public static void Send(NetworkBehaviour behaviour, int relativeIndex, NetworkWriter writer, Channel channelId, bool requireAuthority)
         {
             var index = behaviour.Identity.RemoteCallCollection.GetIndexOffset(behaviour) + relativeIndex;
             Validate(behaviour, index, requireAuthority);
@@ -24,7 +24,7 @@ namespace Mirage.RemoteCalls
             behaviour.Identity.Client.Player.Send(message, channelId);
         }
 
-        public static Task SendWithReturn<T>(INetworkNode behaviour, int relativeIndex, NetworkWriter writer, bool requireAuthority)
+        public static Task SendWithReturn<T>(NetworkBehaviour behaviour, int relativeIndex, NetworkWriter writer, bool requireAuthority)
         {
             var index = behaviour.Identity.RemoteCallCollection.GetIndexOffset(behaviour) + relativeIndex;
             Validate(behaviour, index, requireAuthority);
@@ -45,7 +45,7 @@ namespace Mirage.RemoteCalls
             return task;
         }
 
-        private static void Validate(INetworkNode behaviour, int index, bool requireAuthority)
+        private static void Validate(NetworkBehaviour behaviour, int index, bool requireAuthority)
         {
             var client = behaviour.Identity.Client;
 
@@ -75,7 +75,7 @@ namespace Mirage.RemoteCalls
         /// <param name="target"></param>
         /// <param name="player">player used for RpcTarget.Player</param>
         /// <returns></returns>
-        public static bool ShouldInvokeLocally(INetworkNode behaviour, bool requireAuthority)
+        public static bool ShouldInvokeLocally(NetworkBehaviour behaviour, bool requireAuthority)
         {
             // not client? error
             if (!behaviour.Identity.IsClient)

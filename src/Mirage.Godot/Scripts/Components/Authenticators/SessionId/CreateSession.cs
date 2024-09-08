@@ -36,7 +36,7 @@ namespace Mirage.Authenticators.SessionId
             Server.MessageHandler.RegisterHandler<RequestSessionMessage>(HandleRequestSession);
         }
 
-        private void ClientConnected(NetworkPlayer player)
+        private void ClientConnected(INetworkPlayer player)
         {
             if (Authenticator.ClientIdStore.TryGetSession(out var session))
             {
@@ -58,7 +58,7 @@ namespace Mirage.Authenticators.SessionId
             Authenticator.SendAuthentication(Client, msg);
         }
 
-        private void ClientAuthenticated(NetworkPlayer player)
+        private void ClientAuthenticated(INetworkPlayer player)
         {
             if (!Authenticator.ClientIdStore.TryGetSession(out _))
             {
@@ -89,7 +89,7 @@ namespace Mirage.Authenticators.SessionId
             });
         }
 
-        private void HandleRequestSession(NetworkPlayer player, RequestSessionMessage message)
+        private void HandleRequestSession(INetworkPlayer player, RequestSessionMessage message)
         {
             if (logger.LogEnabled()) logger.Log($"{player} requested new session token");
             var sessionKey = Authenticator.CreateOrRefreshSession(player);

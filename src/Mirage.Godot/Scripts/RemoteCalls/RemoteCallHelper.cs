@@ -16,7 +16,7 @@ namespace Mirage.RemoteCalls
         public int[] IndexOffset;
         public RemoteCall[] RemoteCalls;
 
-        public unsafe void RegisterAll(INetworkNode[] behaviours)
+        public unsafe void RegisterAll(NetworkBehaviour[] behaviours)
         {
             var behaviourCount = behaviours.Length;
             var totalCount = 0;
@@ -24,27 +24,20 @@ namespace Mirage.RemoteCalls
             IndexOffset = new int[behaviourCount];
             for (var i = 0; i < behaviourCount; i++)
             {
-                if (behaviours[i] is INetworkNodeWithRpc withRpc)
-                {
-                    counts[i] = withRpc.GetRpcCount();
-                    totalCount += counts[i];
+                counts[i] = behaviours[i].GetRpcCount();
+                totalCount += counts[i];
 
-                    if (i > 0)
-                        IndexOffset[i] = IndexOffset[i - 1] + counts[i - 1];
-                }
+                if (i > 0)
+                    IndexOffset[i] = IndexOffset[i - 1] + counts[i - 1];
             }
 
             RemoteCalls = new RemoteCall[totalCount];
             for (var i = 0; i < behaviourCount; i++)
             {
-                if (behaviours[i] is INetworkNodeWithRpc withRpc)
-                {
-                    withRpc.RegisterRpc(this);
-                }
+                behaviours[i].RegisterRpc(this);
             }
         }
-
-        public void Register(int index, string name, bool cmdRequireAuthority, RpcInvokeType invokerType, INetworkNode behaviour, RpcDelegate func)
+        public void Register(int index, string name, bool cmdRequireAuthority, RpcInvokeType invokerType, NetworkBehaviour behaviour, RpcDelegate func)
         {
             var indexOffset = GetIndexOffset(behaviour);
             // weaver gives index, so should never give 2 indexes that are the same
@@ -61,9 +54,9 @@ namespace Mirage.RemoteCalls
             }
         }
 
-        public void RegisterRequest<T>(int index, string name, bool cmdRequireAuthority, RpcInvokeType invokerType, INetworkNode behaviour, RequestDelegate<T> func)
+        public void RegisterRequest<T>(int index, string name, bool cmdRequireAuthority, RpcInvokeType invokerType, NetworkBehaviour behaviour, RequestDelegate<T> func)
         {
-            async Task Wrapper(INetworkNode obj, NetworkReader reader, NetworkPlayer senderPlayer, int replyId)
+            async Task Wrapper(NetworkBehaviour obj, NetworkReader reader, INetworkPlayer senderPlayer, int replyId)
             {
                 /// invoke the serverRpc and send a reply message
                 var result = await func(obj, reader, senderPlayer, replyId);
@@ -81,7 +74,7 @@ namespace Mirage.RemoteCalls
                 }
             }
 
-            void CmdWrapper(INetworkNode obj, NetworkReader reader, NetworkPlayer senderPlayer, int replyId)
+            void CmdWrapper(NetworkBehaviour obj, NetworkReader reader, INetworkPlayer senderPlayer, int replyId)
             {
                 Wrapper(obj, reader, senderPlayer, replyId).Forget();
             }
@@ -90,13 +83,13 @@ namespace Mirage.RemoteCalls
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int GetIndexOffset(INetworkNode behaviour)
+        public int GetIndexOffset(NetworkBehaviour behaviour)
         {
             return IndexOffset[behaviour.ComponentIndex];
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public RemoteCall GetRelative(INetworkNode behaviour, int index)
+        public RemoteCall GetRelative(NetworkBehaviour behaviour, int index)
         {
             return RemoteCalls[GetIndexOffset(behaviour) + index];
         }
@@ -112,8 +105,8 @@ namespace Mirage.RemoteCalls
     /// </summary>
     /// <param name="obj"></param>
     /// <param name="reader"></param>
-    public delegate void RpcDelegate(INetworkNode obj, NetworkReader reader, NetworkPlayer senderPlayer, int replyId);
-    public delegate Task<T> RequestDelegate<T>(INetworkNode obj, NetworkReader reader, NetworkPlayer senderPlayer, int replyId);
+    public delegate void RpcDelegate(NetworkBehaviour obj, NetworkReader reader, INetworkPlayer senderPlayer, int replyId);
+    public delegate Task<T> RequestDelegate<T>(NetworkBehaviour obj, NetworkReader reader, INetworkPlayer senderPlayer, int replyId);
 
     // invoke type for Rpc
     public enum RpcInvokeType
@@ -148,9 +141,9 @@ namespace Mirage.RemoteCalls
         /// </summary>
         public readonly string Name;
 
-        public readonly INetworkNode Behaviour;
+        public readonly NetworkBehaviour Behaviour;
 
-        public RemoteCall(INetworkNode behaviour, RpcInvokeType invokeType, RpcDelegate function, bool requireAuthority, string name)
+        public RemoteCall(NetworkBehaviour behaviour, RpcInvokeType invokeType, RpcDelegate function, bool requireAuthority, string name)
         {
             Behaviour = behaviour;
             InvokeType = invokeType;
@@ -159,7 +152,7 @@ namespace Mirage.RemoteCalls
             Name = name;
         }
 
-        internal void Invoke(NetworkReader reader, NetworkPlayer senderPlayer = null, int replyId = 0)
+        internal void Invoke(NetworkReader reader, INetworkPlayer senderPlayer = null, int replyId = 0)
         {
             Function(Behaviour, reader, senderPlayer, replyId);
         }

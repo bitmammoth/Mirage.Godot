@@ -1,0 +1,9 @@
+[gd_scene load_steps=4 format=3 uid="uid://c3gvpoefqnl1c"]
+
+[ext_resource type="PackedScene" uid="uid://casfcv0sbio2i" path="res://Prefabs/Mob.tscn" id="1_13gtn"]
+[ext_resource type="PackedScene" uid="uid://nea4bwm2wwpj" path="res://Prefabs/Player.tscn" id="2_fi1rp"]
+[ext_resource type="Script" path="res://Scenes/NetworkResourcePreloader.cs" id="3_pq2f7"]
+
+[node name="NetworkResourcePreloader" type="ResourcePreloader"]
+resources = [PackedStringArray("Mob", "Player"), [ExtResource("1_13gtn"), ExtResource("2_fi1rp")]]
+script = ExtResource("3_pq2f7")

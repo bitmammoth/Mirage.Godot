@@ -11,7 +11,7 @@ namespace Mirage.RemoteCalls
     {
         private static readonly ILogger logger = LogFactory.GetLogger(typeof(ClientRpcSender));
 
-        public static void Send(INetworkNode behaviour, int relativeIndex, NetworkWriter writer, Channel channelId, bool excludeOwner)
+        public static void Send(NetworkBehaviour behaviour, int relativeIndex, NetworkWriter writer, Channel channelId, bool excludeOwner)
         {
             var index = behaviour.Identity.RemoteCallCollection.GetIndexOffset(behaviour) + relativeIndex;
             Validate(behaviour, index);
@@ -21,7 +21,7 @@ namespace Mirage.RemoteCalls
             behaviour.Identity.Server.SendToObservers(behaviour.Identity, message, excludeLocalPlayer: true, excludeOwner, channelId: channelId);
         }
 
-        public static void SendTarget(INetworkNode behaviour, int relativeIndex, NetworkWriter writer, Channel channelId, NetworkPlayer player)
+        public static void SendTarget(NetworkBehaviour behaviour, int relativeIndex, NetworkWriter writer, Channel channelId, INetworkPlayer player)
         {
             var index = behaviour.Identity.RemoteCallCollection.GetIndexOffset(behaviour) + relativeIndex;
             Validate(behaviour, index);
@@ -33,7 +33,7 @@ namespace Mirage.RemoteCalls
             player.Send(message, channelId);
         }
 
-        public static Task<T> SendTargetWithReturn<T>(INetworkNode behaviour, int relativeIndex, NetworkWriter writer, NetworkPlayer player)
+        public static Task<T> SendTargetWithReturn<T>(NetworkBehaviour behaviour, int relativeIndex, NetworkWriter writer, INetworkPlayer player)
         {
             var index = behaviour.Identity.RemoteCallCollection.GetIndexOffset(behaviour) + relativeIndex;
             Validate(behaviour, index);
@@ -55,7 +55,7 @@ namespace Mirage.RemoteCalls
             return task;
         }
 
-        private static NetworkPlayer GetTarget(INetworkNode behaviour, NetworkPlayer player)
+        private static INetworkPlayer GetTarget(NetworkBehaviour behaviour, INetworkPlayer player)
         {
             // player parameter is optional. use owner if null
             if (player == null)
@@ -69,7 +69,7 @@ namespace Mirage.RemoteCalls
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static RpcMessage CreateMessage(INetworkNode behaviour, int index, NetworkWriter writer)
+        private static RpcMessage CreateMessage(NetworkBehaviour behaviour, int index, NetworkWriter writer)
         {
             var message = new RpcMessage
             {
@@ -80,7 +80,7 @@ namespace Mirage.RemoteCalls
             return message;
         }
 
-        private static void Validate(INetworkNode behaviour, int index)
+        private static void Validate(NetworkBehaviour behaviour, int index)
         {
             var server = behaviour.Identity.Server;
             if (server == null || !server.Active)
@@ -97,7 +97,7 @@ namespace Mirage.RemoteCalls
         /// <param name="target"></param>
         /// <param name="player">player used for RpcTarget.Player</param>
         /// <returns></returns>
-        public static bool ShouldInvokeLocally(INetworkNode behaviour, RpcTarget target, NetworkPlayer player)
+        public static bool ShouldInvokeLocally(NetworkBehaviour behaviour, RpcTarget target, INetworkPlayer player)
         {
             // not server? error
             if (!behaviour.Identity.IsServer)
@@ -130,7 +130,7 @@ namespace Mirage.RemoteCalls
         /// </summary>
         /// <param name="player"></param>
         /// <returns></returns>
-        public static bool IsLocalPlayerObserver(INetworkNode behaviour)
+        public static bool IsLocalPlayerObserver(NetworkBehaviour behaviour)
         {
             var local = behaviour.Identity.Server.LocalPlayer;
             return behaviour.Identity.observers.Contains(local);
@@ -142,7 +142,7 @@ namespace Mirage.RemoteCalls
         /// </summary>
         /// <param name="player"></param>
         /// <returns></returns>
-        public static bool IsLocalPlayerTarget(INetworkNode behaviour, NetworkPlayer target)
+        public static bool IsLocalPlayerTarget(NetworkBehaviour behaviour, INetworkPlayer target)
         {
             var local = behaviour.Identity.Server.LocalPlayer;
             return local == target;

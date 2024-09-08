@@ -26,7 +26,7 @@ namespace Mirage
         }
 
 
-        private void OnUpdateVarsMessage(NetworkPlayer sender, UpdateVarsMessage msg)
+        private void OnUpdateVarsMessage(INetworkPlayer sender, UpdateVarsMessage msg)
         {
             if (logger.LogEnabled()) logger.Log("SyncVarReceiver.OnUpdateVarsMessage " + msg.NetId);
 
@@ -46,7 +46,7 @@ namespace Mirage
             }
         }
 
-        private bool ValidateReceive(NetworkPlayer sender, NetworkIdentity identity)
+        private bool ValidateReceive(INetworkPlayer sender, NetworkIdentity identity)
         {
             // only need to validate if we are server
             // client can always receive from server

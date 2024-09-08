@@ -71,7 +71,7 @@ namespace Mirage
             return GetComponentInParent<T>(parent);
         }
 
-        public static NetworkIdentity TryGetNetworkIdentity<T>(this T node) where T : Node, INetworkNode
+        public static NetworkIdentity TryGetNetworkIdentity<T>(this T node) where T : Node
         {
             var _identity = node.GetComponentInParent<NetworkIdentity>();
 

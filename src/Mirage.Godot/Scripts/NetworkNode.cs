@@ -42,7 +42,7 @@ namespace Mirage
 
     public class NetworkNodeSyncVars
     {
-        private static readonly ILogger logger = LogFactory.GetLogger(typeof(NetworkNodeSyncVars));
+       /* private static readonly ILogger logger = LogFactory.GetLogger(typeof(NetworkNodeSyncVars));
 
         public readonly INetworkNodeWithSyncVar Node;
         public readonly NetworkIdentity Identity;
@@ -175,7 +175,7 @@ namespace Mirage
         /// Clears dirty bits and sets the next sync time
         /// </summary>
         /// <param name="now"></param>
-        public void ClearShouldSync(float now)
+        public void ClearShouldSync(double now)
         {
             SyncSettings.UpdateTime(ref _nextSyncTime, now);
             ClearDirtyBits();
@@ -357,6 +357,6 @@ namespace Mirage
             {
                 syncObject.Reset();
             }
-        }
+        }*/
     }
 }

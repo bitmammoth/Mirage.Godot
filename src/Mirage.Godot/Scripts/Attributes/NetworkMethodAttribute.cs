@@ -42,4 +42,41 @@ namespace Mirage
         HasAuthority = 8,
         LocalOwner = 16,
     }
+    /// <summary>
+    /// Converts a string property into a Scene property in the inspector
+    /// </summary>
+    public sealed class SceneAttribute : PropertyAttribute { }
+
+    /// <summary>
+    /// Used to show private SyncList in the inspector,
+    /// <para> Use instead of SerializeField for non Serializable types </para>
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Field)]
+    public sealed class ShowInInspectorAttribute : Attribute { }
+
+    /// <summary>
+    /// Draws UnityEvent as a foldout
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Field)]
+    public sealed class FoldoutEventAttribute : PropertyAttribute { }
+
+    /// <summary>
+    /// Makes field readonly in inspector.
+    /// <para>This is useful for fields that are set by code, but are shown iin inpector for debuggiing</para>
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Field)]
+    public sealed class ReadOnlyInspectorAttribute : PropertyAttribute { }
+
+    /// <summary>
+    /// Forces the user to provide a prefab that has a NetworkIdentity component and is registered.
+    /// Also provides a fix button to fix the prefab if it hasn't been networked.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Field)]
+    public sealed class NetworkedPrefabAttribute : PropertyAttribute { }
+
+    /// <summary>
+    /// Add to NetworkBehaviour to force SyncSettings to be drawn, even if there are no syncvars
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Class)]
+    public sealed class ShowSyncSettingsAttribute : Attribute { }
 }

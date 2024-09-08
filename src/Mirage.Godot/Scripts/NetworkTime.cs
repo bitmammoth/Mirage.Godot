@@ -81,7 +81,7 @@ namespace Mirage
         // executed at the server when we receive a ping message
         // reply with a pong containing the time from the client
         // and time from the server
-        internal void OnServerPing(NetworkPlayer player, NetworkPingMessage msg)
+        internal void OnServerPing(INetworkPlayer player, NetworkPingMessage msg)
         {
             if (logger.LogEnabled()) logger.Log("OnPingServerMessage  conn=" + player);
 
