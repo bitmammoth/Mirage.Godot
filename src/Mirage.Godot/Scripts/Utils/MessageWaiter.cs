@@ -23,7 +23,7 @@ namespace Mirage
             _messageHandler.RegisterHandler<T>(HandleMessage, allowUnauthenticated);
         }
 
-        private void HandleMessage(NetworkPlayer player, T message)
+        private void HandleMessage(INetworkPlayer player, T message)
         {
             _message = message;
             _received = true;

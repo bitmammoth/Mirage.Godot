@@ -20,8 +20,8 @@ namespace Mirage
                 LogFactory.GetLogger("Example1.NetworkTransform3D").filterLogType = LogType.Warning;
             }
 
-            //LogFactory.GetLogger<SyncVarSender>().filterLogType = LogType.Log;
-            //LogFactory.GetLogger<SyncVarReceiver>().filterLogType = LogType.Log;
+            LogFactory.GetLogger<SyncVarSender>().filterLogType = LogType.Log;
+            LogFactory.GetLogger<SyncVarReceiver>().filterLogType = LogType.Log;
             LogFactory.GetLogger<NetworkManager>().filterLogType = LogType.Log;
         }
 

@@ -121,22 +121,19 @@ namespace Mirage
             AddToGroup(nameof(NetworkIdentity));
         }
 
-        private static IEnumerable<INetworkNode> GetACllhildNodes(Node node)
+        private static IEnumerable<NetworkBehaviour> GetAllNetworkBehaviours(Node node)
         {
-            // todo can we use find_children instead?
-            if (node is INetworkNode nn)
-                yield return nn;
-
             foreach (var child in node.GetChildren())
             {
-                GetACllhildNodes(child);
+                if (child is NetworkBehaviour behaviour)
+                    yield return behaviour;
             }
         }
 
 
         public NetworkSpawnSettings SpawnSettings = NetworkSpawnSettings.Default;
 
-        /// <summary>
+/// <summary>
         /// Returns true if running as a client and this object was spawned by a server.
         /// </summary>
         public bool IsClient => IsSpawned && Client != null && Client.Active;
@@ -149,13 +146,18 @@ namespace Mirage
         /// <summary>
         /// Returns true if we're on host mode.
         /// </summary>
-        public bool IsLocalClient => IsSpawned && Server != null && Server.LocalClientActive;
+        [System.Obsolete("use IsHost instead")]
+        public bool IsLocalClient => IsHost;
+        /// <summary>
+        /// Returns true if we're on host mode.
+        /// </summary>
+        public bool IsHost => IsSpawned && Server != null && Server.IsHost;
 
         /// <summary>
         /// This returns true if this object is the one that represents the player on the local machine.
         /// <para>This is set when the server has spawned an object for this particular client.</para>
         /// </summary>
-        public bool IsMainCharacter => IsSpawned && Client != null && Client.Player?.Identity == this;
+        public bool IsLocalPlayer => IsSpawned && Client != null && Client.Player?.Identity == this;
 
         /// <summary>
         /// This returns true if this object is the authoritative player object on the client.
@@ -167,7 +169,7 @@ namespace Mirage
         /// <summary>
         /// The set of network connections (players) that can see this object.
         /// </summary>
-        public readonly HashSet<NetworkPlayer> observers = new HashSet<NetworkPlayer>();
+        public readonly HashSet<INetworkPlayer> observers = new HashSet<INetworkPlayer>();
 
         /// <summary>
         /// Unique identifier for this particular object instance, used for tracking objects between networked clients and the server.
@@ -231,15 +233,15 @@ namespace Mirage
         /// The ClientObjectManager is present only for client instances.
         /// </summary>
         public ClientObjectManager ClientObjectManager { get; private set; }
-        private NetworkPlayer _owner;
+        private INetworkPlayer _owner;
 
         /// <summary>
         /// The NetworkPlayer associated with this <see cref="NetworkIdentity">NetworkIdentity</see>. This property is only valid on server
         /// <para>Use it to return details such as the connection&apos;s identity, IP address and ready status.</para>
         /// </summary>
-        public new NetworkPlayer Owner => _owner;
+        public new INetworkPlayer Owner => _owner;
 
-        internal void SetOwner(NetworkPlayer player)
+        internal void SetOwner(INetworkPlayer player)
         {
             // do nothing if value is the same
             if (_owner == player)
@@ -261,7 +263,7 @@ namespace Mirage
             _owner?.AddOwnedObject(this);
 
             // if authority changes, we need to check if we are still allowed to sync to/from this instance
-            foreach (var comp in NetworkNodeSyncVars)
+            foreach (var comp in NetworkBehaviours)
                 comp.UpdateSyncObjectShouldSync();
 
             _onOwnerChanged.Invoke(_owner);
@@ -273,46 +275,18 @@ namespace Mirage
 
 
         [NonSerialized]
-        private INetworkNode[] _networkBehavioursCache;
-        private NetworkNodeSyncVars[] _networkBehavioursWithSyncVarCache;
+        private NetworkBehaviour[] _networkBehavioursCache;
 
-
-        /// <summary>
-        /// Array of NetworkBehaviours associated with this NetworkIdentity. Can be in child GameObjects.
-        /// </summary>
-        public INetworkNode[] NetworkBehaviours
+        public NetworkBehaviour[] NetworkBehaviours
         {
             get
             {
                 if (_networkBehavioursCache is null)
                 {
-                    var components = FindBehaviourForThisIdentity();
-
-                    // we write component index as byte
-                    // check if components are in byte.MaxRange just to be 100% sure that we avoid overflows
-                    if (components.Length > byte.MaxValue)
-                        throw new InvalidOperationException("Only 255 NetworkBehaviours are allowed per GameObject.");
-
-                    _networkBehavioursCache = components;
+                    _networkBehavioursCache = GetAllNetworkBehaviours(Root).ToArray();
                 }
 
                 return _networkBehavioursCache;
-            }
-        }
-
-        private NetworkNodeSyncVars[] NetworkNodeSyncVars
-        {
-            get
-            {
-                if (_networkBehavioursWithSyncVarCache is null)
-                {
-                    _networkBehavioursWithSyncVarCache = NetworkBehaviours
-                        .OfType<INetworkNodeWithSyncVar>()
-                        .Select(x => new NetworkNodeSyncVars(x, this))
-                        .ToArray();
-                }
-
-                return _networkBehavioursWithSyncVarCache;
             }
         }
 
@@ -325,9 +299,9 @@ namespace Mirage
         /// </para>
         /// </summary>
         /// <param name="components"></param>
-        private INetworkNode[] FindBehaviourForThisIdentity()
+        private NetworkBehaviour[] FindBehaviourForThisIdentity()
         {
-            var childComponents = Root.GetComponentsInChildrenEnumerable<INetworkNode>().ToList();
+            var childComponents = Root.GetComponentsInChildrenEnumerable<NetworkBehaviour>().ToList();
 
             // start at last so we can remove from end of array instead of start
             for (var i = childComponents.Count - 1; i >= 0; i--)
@@ -395,7 +369,7 @@ namespace Mirage
         private AddLateEvent _onStartClient = new AddLateEvent();
         private AddLateEvent _onStartLocalPlayer = new AddLateEvent();
         private AddLateEvent<bool> _onAuthorityChanged = new AddLateEvent<bool>();
-        private AddLateEvent<NetworkPlayer> _onOwnerChanged = new AddLateEvent<NetworkPlayer>();
+        private AddLateEvent<INetworkPlayer> _onOwnerChanged = new AddLateEvent<INetworkPlayer>();
         private AddLateEvent _onStopClient = new AddLateEvent();
         private AddLateEvent _onStopServer = new AddLateEvent();
         private bool _clientStarted;
@@ -443,7 +417,7 @@ namespace Mirage
         /// <para>This even is only called on server</para>
         /// <para>See <see cref="OnAuthorityChanged"/> for more comments on owner and authority</para>
         /// </summary>
-        public IAddLateEvent<NetworkPlayer> OnOwnerChanged => _onOwnerChanged;
+        public IAddLateEvent<INetworkPlayer> OnOwnerChanged => _onOwnerChanged;
 
         /// <summary>
         /// This is invoked on clients when the server has caused this object to be destroyed.
@@ -462,7 +436,7 @@ namespace Mirage
         /// this is used when a connection is destroyed, since the "observers" property is read-only
         /// </summary>
         /// <param name="player"></param>
-        internal void RemoveObserverInternal(NetworkPlayer player)
+        internal void RemoveObserverInternal(INetworkPlayer player)
         {
             observers.Remove(player);
         }
@@ -479,16 +453,18 @@ namespace Mirage
                 ServerObjectManager.Destroy(this);
             }
         }
-
         internal void StartServer()
         {
             if (logger.LogEnabled()) logger.Log($"OnStartServer invoked on '{this}' (NetId: {NetId})");
 
-            // update sync direction before invoking start callback
-            // need to do this because IsServer might now be set when it previosuly wasn't
-            foreach (var comp in NetworkNodeSyncVars)
-                comp.UpdateSyncObjectShouldSync();
+            // Iterate over all NetworkBehaviour components
+            foreach (var behaviour in NetworkBehaviours)
+            {
+                // Update the sync state of the component
+                behaviour.UpdateSyncObjectShouldSync();
+            }
 
+            // Invoke the start server event
             _onStartServer.Invoke();
         }
 
@@ -504,7 +480,7 @@ namespace Mirage
 
             // update sync direction before invoking start callback
             // need to do this because IsClient/Owner might now be set when it previosuly wasn't
-            foreach (var comp in NetworkNodeSyncVars)
+            foreach (var comp in NetworkBehaviours)
                 comp.UpdateSyncObjectShouldSync();
 
             _clientStarted = true;
@@ -523,7 +499,7 @@ namespace Mirage
         internal void NotifyAuthority()
         {
             // if authority changes, we need to check if we are still allowed to sync to/from this instance
-            foreach (var comp in NetworkNodeSyncVars)
+            foreach (var comp in NetworkBehaviours)
                 comp.UpdateSyncObjectShouldSync();
 
             if (!_hadAuthority && HasAuthority)
@@ -554,7 +530,7 @@ namespace Mirage
         /// <summary>
         /// Check if observer can be seen by player.
         /// <returns></returns>
-        internal bool OnCheckObserver(NetworkPlayer player)
+        internal bool OnCheckObserver(INetworkPlayer player)
         {
             return Visibility.OnCheckObserver(player);
         }
@@ -597,13 +573,13 @@ namespace Mirage
         ///     </description></item>
         /// </list>
         /// </remarks>
-        private void OnSerialize(int i, NetworkNodeSyncVars comp, NetworkWriter writer, bool initialState)
+        private void OnSerialize(int i, NetworkBehaviour comp, NetworkWriter writer, bool initialState)
         {
             // write index as byte [0..255]
             writer.WriteByte((byte)i);
 
             comp.OnSerialize(writer, initialState);
-            if (logger.LogEnabled()) logger.Log($"OnSerializeSafely written for '{comp.Node.Name}', Component '{comp.GetType()}'");
+            if (logger.LogEnabled()) logger.Log($"OnSerializeSafely written for '{comp.Name}', Component '{comp.GetType()}'");
 
             // serialize a barrier to be checked by the deserializer
             writer.WriteByte(BARRIER);
@@ -624,7 +600,7 @@ namespace Mirage
             var observersWritten = 0;
 
 
-            var components = NetworkNodeSyncVars;
+            var components = NetworkBehaviours;
             // store time as variable so we dont have to call property for each component
             var now = (float)World.Time.LocalFrameTime;
 
@@ -688,7 +664,7 @@ namespace Mirage
         // been synchronized yet. Probably due to not meeting the syncInterval
         internal bool StillDirty()
         {
-            foreach (var behaviour in NetworkNodeSyncVars)
+            foreach (var behaviour in NetworkBehaviours)
             {
                 if (behaviour.AnyDirtyBits())
                     return true;
@@ -705,7 +681,7 @@ namespace Mirage
             try
             {
                 // deserialize all components that were received
-                var components = NetworkNodeSyncVars;
+                var components = NetworkBehaviours;
                 // check if we can read at least 1 byte
                 while (reader.CanReadBytes(1))
                 {
@@ -739,7 +715,7 @@ namespace Mirage
             }
         }
 
-        private void OnDeserialize(NetworkNodeSyncVars comp, NetworkReader reader, bool initialState)
+        private void OnDeserialize(NetworkBehaviour comp, NetworkReader reader, bool initialState)
         {
             // check we are allow to read for this comp
             ThrowIfInvalidSendToServer(comp);
@@ -755,7 +731,7 @@ namespace Mirage
             comp.ClearDirtyBit(comp._deserializeMask);
         }
 
-        private void ThrowIfIndexOutOfRange(NetworkNodeSyncVars[] components, byte index)
+        private void ThrowIfIndexOutOfRange(NetworkBehaviour[] components, byte index)
         {
             if (index >= components.Length)
             {
@@ -765,7 +741,7 @@ namespace Mirage
                     $"  * out dated version of prefab on either server or client, Try rebuilding both.\n\n");
             }
         }
-        private void ThrowIfInvalidSendToServer(NetworkNodeSyncVars comp)
+        private void ThrowIfInvalidSendToServer(NetworkBehaviour comp)
         {
             // if we are server, but SyncSettings is not To.Server, then we should not be reading or appling any values
             // this is a problem we can't resolve (because we dont known length
@@ -778,7 +754,7 @@ namespace Mirage
                    $"Ensure SyncSettings is same on both Server and Client, this may rebuilding both.");
             }
         }
-        private void ThrowIfBarrierByteIncorrect(NetworkNodeSyncVars comp, byte barrierData)
+        private void ThrowIfBarrierByteIncorrect(NetworkBehaviour comp, byte barrierData)
         {
             if (barrierData != BARRIER)
             {
@@ -792,7 +768,7 @@ namespace Mirage
             }
         }
 
-        private unsafe void CheckForwardToObservers(NetworkNodeSyncVars comp, NetworkReader reader, int startPosition, ref PooledNetworkWriter writer)
+        private unsafe void CheckForwardToObservers(NetworkBehaviour comp, NetworkReader reader, int startPosition, ref PooledNetworkWriter writer)
         {
             // if we are not server, we can't forward to anywhere
             if (!IsServer)
@@ -834,7 +810,7 @@ namespace Mirage
             SyncVarSender = networkServer.SyncVarSender;
             Client = networkServer.LocalClient;
 
-            foreach (var behaviour in NetworkNodeSyncVars)
+            foreach (var behaviour in NetworkBehaviours)
                 behaviour.InitializeSyncObjects();
         }
 
@@ -874,7 +850,7 @@ namespace Mirage
                 SyncVarSender = Client.SyncVarSender;
             }
 
-            foreach (var behaviour in NetworkNodeSyncVars)
+            foreach (var behaviour in NetworkBehaviours)
                 behaviour.InitializeSyncObjects();
         }
 
@@ -890,7 +866,7 @@ namespace Mirage
             observers.Clear();
         }
 
-        internal void AddObserver(NetworkPlayer player)
+        internal void AddObserver(INetworkPlayer player)
         {
             if (observers.Contains(player))
             {
@@ -912,14 +888,14 @@ namespace Mirage
         /// </summary>
         /// <param name="observersSet">set to clear and fill with new observers</param>
         /// <param name="initialize">If Object is being first spawned or refreshed later on</param>
-        internal void GetNewObservers(HashSet<NetworkPlayer> observersSet, bool initialize)
+        internal void GetNewObservers(HashSet<INetworkPlayer> observersSet, bool initialize)
         {
             observersSet.Clear();
 
             Visibility.OnRebuildObservers(observersSet, initialize);
         }
 
-        private static readonly HashSet<NetworkPlayer> newObservers = new HashSet<NetworkPlayer>();
+        private static readonly HashSet<INetworkPlayer> newObservers = new HashSet<INetworkPlayer>();
 
         /// <summary>
         /// This causes the set of players that can see this object to be rebuild.
@@ -1002,7 +978,7 @@ namespace Mirage
         /// authority is setup automatically.</para>
         /// </summary>
         /// <param name="player">	The connection of the client to assign authority to.</param>
-        public void AssignClientAuthority(NetworkPlayer player)
+        public void AssignClientAuthority(INetworkPlayer player)
         {
             if (!IsServer)
             {
@@ -1105,7 +1081,7 @@ namespace Mirage
             // store time as variable so we dont have to call property for each component
             var now = World.Time.LocalFrameTime;
 
-            foreach (var comp in NetworkNodeSyncVars)
+            foreach (var comp in NetworkBehaviours)
             {
                 comp.ClearShouldSync(now);
             }
@@ -1122,7 +1098,7 @@ namespace Mirage
             // store time as variable so we dont have to call property for each component
             var now = World.Time.LocalFrameTime;
 
-            foreach (var comp in NetworkNodeSyncVars)
+            foreach (var comp in NetworkBehaviours)
             {
                 // todo this seems weird, should we be clearing this somewhere else?
                 if (comp.TimeToSync(now))
@@ -1134,7 +1110,7 @@ namespace Mirage
 
         private void ResetSyncObjects()
         {
-            foreach (var comp in NetworkNodeSyncVars)
+            foreach (var comp in NetworkBehaviours)
             {
                 comp.ResetSyncObjects();
             }

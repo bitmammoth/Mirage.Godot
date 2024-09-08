@@ -31,7 +31,7 @@ namespace Example1
 
         public override void _PhysicsProcess(double delta)
         {
-            if (this.HasAuthority())
+            if (Identity.HasAuthority)
             {
                 var direction = GetInput();
 

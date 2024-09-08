@@ -255,7 +255,7 @@ namespace Mirage
             waiter.Callback(AuthenticationSuccessCallback);
         }
 
-        private void AuthenticationSuccessCallback(NetworkPlayer _, AuthSuccessMessage message)
+        private void AuthenticationSuccessCallback(INetworkPlayer _, AuthSuccessMessage message)
         {
             if (logger.LogEnabled()) logger.Log($"Authentication successful with {message.AuthenticatorName}");
 
@@ -407,7 +407,7 @@ namespace Mirage
         internal class DataHandler : IDataHandler
         {
             private IConnection _connection;
-            private NetworkPlayer _player;
+            private INetworkPlayer _player;
             private readonly IMessageReceiver _messageHandler;
 
             public DataHandler(IMessageReceiver messageHandler)
@@ -415,7 +415,7 @@ namespace Mirage
                 _messageHandler = messageHandler;
             }
 
-            public void SetConnection(IConnection connection, NetworkPlayer player)
+            public void SetConnection(IConnection connection, INetworkPlayer player)
             {
                 _connection = connection;
                 _player = player;

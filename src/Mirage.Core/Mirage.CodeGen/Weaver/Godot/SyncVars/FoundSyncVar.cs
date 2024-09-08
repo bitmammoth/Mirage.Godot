@@ -13,10 +13,6 @@ namespace Mirage.Weaver.SyncVars
         public readonly int DirtyIndex;
         public long DirtyBit => 1L << DirtyIndex;
 
-        /// <summary>
-        /// Flag to say if the sync var was successfully processed or not.
-        /// We can check this else where in the code to so we dont throw extra errors when syncvar is invalid
-        /// </summary>
         public bool HasProcessed { get; set; } = false;
 
         public FoundSyncVar(ModuleDefinition module, FoundNetworkBehaviour behaviour, FieldDefinition fieldDefinition, int dirtyIndex)
@@ -33,16 +29,12 @@ namespace Mirage.Weaver.SyncVars
         public TypeReference OriginalType { get; private set; }
         public bool IsWrapped { get; private set; }
 
-
         public bool HasHook { get; private set; }
         public SyncVarHook Hook { get; private set; }
         public bool InitialOnly { get; private set; }
         public bool InvokeHookOnServer { get; private set; }
         public bool InvokeHookOnOwner { get; private set; }
 
-        /// <summary>
-        /// Changing the type of the field to the wrapper type, if one exists
-        /// </summary>
         public void SetWrapType()
         {
             OriginalName = FieldDefinition.Name;
@@ -61,12 +53,11 @@ namespace Mirage.Weaver.SyncVars
 
             if (typeReference.Is<NetworkIdentity>())
             {
-                // change the type of the field to a wrapper NetworkIdentitySyncvar
                 wrapType = Module.ImportReference<NetworkIdentitySyncvar>();
                 return true;
             }
 
-            if (typeReference.Resolve().IsDerivedFrom<INetworkNode>())
+            if (typeReference.Resolve().IsDerivedFrom<NetworkBehaviour>())
             {
                 wrapType = Module.ImportReference<NetworkBehaviorSyncvar>();
                 return true;
@@ -76,11 +67,6 @@ namespace Mirage.Weaver.SyncVars
             return false;
         }
 
-
-        /// <summary>
-        /// Finds any attribute values needed for this syncvar
-        /// </summary>
-        /// <param name="module"></param>
         public void ProcessAttributes(Writers writers, Readers readers)
         {
             var hook = HookMethodFinder.GetHookMethod(FieldDefinition, OriginalType);

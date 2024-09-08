@@ -11,7 +11,7 @@ public partial class MobSpawner : Node
 
     [Export] private NetworkManager _networkManager;
     private Random _random = new Random();
-    private List<NetworkPlayer> _players = new();
+    private List<INetworkPlayer> _players = new();
     private int _prefabHash;
 
     public override void _EnterTree()
@@ -19,7 +19,7 @@ public partial class MobSpawner : Node
         _prefabHash = PrefabHashHelper.GetPrefabHash(MobScene);
     }
 
-    private bool TryGetRandomPlayer(out NetworkPlayer player)
+    private bool TryGetRandomPlayer(out INetworkPlayer player)
     {
         _players.Clear();
         _players.AddRange(_networkManager.Server.Players);

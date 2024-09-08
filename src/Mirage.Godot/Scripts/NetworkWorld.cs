@@ -10,7 +10,7 @@ namespace Mirage
     /// </summary>
     /// <param name="hasAuthority">if the owner now has authority or if it was removed</param>
     /// <param name="owner">the new or old owner. Owner value might be null on client side. But will be set on server</param>
-    public delegate void AuthorityChanged(NetworkIdentity identity, bool hasAuthority, NetworkPlayer owner);
+    public delegate void AuthorityChanged(NetworkIdentity identity, bool hasAuthority, INetworkPlayer owner);
 
     /// <summary>
     /// Holds collection of spawned network objects
@@ -48,9 +48,9 @@ namespace Mirage
 
         bool IObjectLocator.TryGetIdentity(uint netId, out NetworkIdentity identity)
         {
-            if (TryGetIdentity(netId, out var networkNode))
+            if (TryGetIdentity(netId, out var networkIdentity))
             {
-                identity = networkNode;
+                identity = networkIdentity;
                 return true;
             }
             else
@@ -73,7 +73,7 @@ namespace Mirage
         {
             if (netId == 0) throw new ArgumentException("id can not be zero", nameof(netId));
             if (identity == null) throw new ArgumentNullException(nameof(identity));
-            if (netId != identity.NetId) throw new ArgumentException("NetworkNode did not have matching netId", nameof(identity));
+            if (netId != identity.NetId) throw new ArgumentException("NetworkIdentity did not have matching netId", nameof(identity));
             if (_spawnedObjects.TryGetValue(netId, out var existing) && existing != null) throw new ArgumentException("An Identity with same id already exists in network world", nameof(netId));
 
             if (logger.LogEnabled()) logger.Log($"Adding [netId={netId}, name={identity.Name}] to World");
@@ -139,7 +139,7 @@ namespace Mirage
             _spawnedObjects.Clear();
         }
 
-        internal void InvokeOnAuthorityChanged(NetworkIdentity identity, bool hasAuthority, NetworkPlayer owner)
+        internal void InvokeOnAuthorityChanged(NetworkIdentity identity, bool hasAuthority, INetworkPlayer owner)
         {
             OnAuthorityChanged?.Invoke(identity, hasAuthority, owner);
         }

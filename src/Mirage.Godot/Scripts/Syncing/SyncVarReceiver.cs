@@ -26,7 +26,7 @@ namespace Mirage
         }
 
 
-        private void OnUpdateVarsMessage(NetworkPlayer sender, UpdateVarsMessage msg)
+        private void OnUpdateVarsMessage(INetworkPlayer sender, UpdateVarsMessage msg)
         {
             if (logger.LogEnabled()) logger.Log("SyncVarReceiver.OnUpdateVarsMessage " + msg.NetId);
 
@@ -46,7 +46,7 @@ namespace Mirage
             }
         }
 
-        private bool ValidateReceive(NetworkPlayer sender, NetworkIdentity identity)
+        private bool ValidateReceive(INetworkPlayer sender, NetworkIdentity identity)
         {
             // only need to validate if we are server
             // client can always receive from server
@@ -68,12 +68,9 @@ namespace Mirage
                 // if we find atleast 1, then that is enough to start reading
                 // we check each component again when we read it
 
-                if (comp is INetworkNodeWithSettings withSettings)
-                {
-                    // we dont need to check From.Owner, if we are sending to server we must be sending from owner
-                    if ((withSettings.SyncSettings.To & SyncTo.Server) != 0)
-                        return true;
-                }
+                // we dont need to check From.Owner, if we are sending to server we must be sending from owner
+                if ((comp.SyncSettings.To & SyncTo.Server) != 0)
+                    return true;
             }
 
             if (logger.WarnEnabled()) logger.LogWarning($"UpdateVarsMessage for object without any NetworkBehaviours with SyncFrom.Owner [netId={identity.NetId}]");

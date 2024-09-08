@@ -42,7 +42,7 @@ namespace Example2d
             }
         }
 
-        private void ServerAuthenticated(NetworkPlayer player)
+        private void ServerAuthenticated(INetworkPlayer player)
         {
             var clone = Spawn(playerPrefab);
             NetworkManager.ServerObjectManager.AddCharacter(player, clone);

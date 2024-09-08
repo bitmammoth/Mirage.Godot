@@ -86,7 +86,7 @@ namespace Mirage
             SpawnSceneObjects();
 
             // host mode?
-            if (_server.LocalClientActive)
+            if (_server.IsHost)
             {
                 StartHostClientObjects();
             }
@@ -118,7 +118,7 @@ namespace Mirage
         /// <param name="prefabHash"></param>
         /// <param name="keepAuthority">Does the previous player remain attached to this connection?</param>
         /// <returns></returns>
-        public void ReplaceCharacter(NetworkPlayer player, NetworkIdentity character, int prefabHash, bool keepAuthority = false)
+        public void ReplaceCharacter(INetworkPlayer player, NetworkIdentity character, int prefabHash, bool keepAuthority = false)
         {
             character.PrefabHash = prefabHash;
             ReplaceCharacter(player, character, keepAuthority);
@@ -132,7 +132,7 @@ namespace Mirage
         /// <param name="identity">Player object spawned for the player.</param>
         /// <param name="keepAuthority">Does the previous player remain attached to this connection?</param>
         /// <returns></returns>
-        public void ReplaceCharacter(NetworkPlayer player, NetworkIdentity identity, bool keepAuthority = false)
+        public void ReplaceCharacter(INetworkPlayer player, NetworkIdentity identity, bool keepAuthority = false)
         {
             if (identity.Owner != null && identity.Owner != player)
             {
@@ -184,7 +184,7 @@ namespace Mirage
         /// <param name="character">The Network Object to add to the Player. Can be spawned or unspawned. Calling this method will respawn it.</param>
         /// <param name="prefabHash">New prefab hash to give to the player, used for dynamically creating objects at runtime.</param>
         /// <exception cref="ArgumentException">throw when the player already has a character</exception>
-        public void AddCharacter(NetworkPlayer player, NetworkIdentity character, int prefabHash)
+        public void AddCharacter(INetworkPlayer player, NetworkIdentity character, int prefabHash)
         {
             character.PrefabHash = prefabHash;
             AddCharacter(player, character);
@@ -198,7 +198,7 @@ namespace Mirage
         /// <param name="player">the Player to add the character to</param>
         /// <param name="character">The Network Object to add to the Player. Can be spawned or unspawned. Calling this method will respawn it.</param>
         /// <exception cref="ArgumentException">throw when the player already has a character</exception>
-        public void AddCharacter(NetworkPlayer player, NetworkIdentity identity)
+        public void AddCharacter(INetworkPlayer player, NetworkIdentity identity)
         {
             // cannot have an existing player object while trying to Add another.
             if (player.HasCharacter)
@@ -249,7 +249,7 @@ namespace Mirage
         /// </summary>
         /// <param name="identity"></param>
         /// <param name="player"></param>
-        internal void ShowToPlayer(NetworkIdentity identity, NetworkPlayer player)
+        internal void ShowToPlayer(NetworkIdentity identity, INetworkPlayer player)
         {
             var visiblity = identity.Visibility;
             if (visiblity is NetworkVisibility networkVisibility)
@@ -260,7 +260,7 @@ namespace Mirage
                 SendSpawnMessage(identity, player);
         }
 
-        internal void HideToPlayer(NetworkIdentity identity, NetworkPlayer player)
+        internal void HideToPlayer(NetworkIdentity identity, INetworkPlayer player)
         {
             var visiblity = identity.Visibility;
             if (visiblity is NetworkVisibility networkVisibility)
@@ -275,7 +275,7 @@ namespace Mirage
         /// <param name="player"></param>
         /// <param name="keepAuthority"></param>
         /// <exception cref="InvalidOperationException">Throws when player does not have a character</exception>
-        public void RemoveCharacter(NetworkPlayer player, bool keepAuthority = false)
+        public void RemoveCharacter(INetworkPlayer player, bool keepAuthority = false)
         {
             ThrowIfNoCharacter(player);
 
@@ -296,7 +296,7 @@ namespace Mirage
         /// <param name="player"></param>
         /// <param name="destroyServerObject"></param>
         /// <exception cref="InvalidOperationException">Throws when player does not have a character</exception>
-        public void DestroyCharacter(NetworkPlayer player, bool destroyServerObject = true)
+        public void DestroyCharacter(INetworkPlayer player, bool destroyServerObject = true)
         {
             ThrowIfNoCharacter(player);
 
@@ -305,7 +305,7 @@ namespace Mirage
         }
 
         /// <exception cref="InvalidOperationException">Throws when player does not have a character</exception>
-        private static void ThrowIfNoCharacter(NetworkPlayer player)
+        private static void ThrowIfNoCharacter(INetworkPlayer player)
         {
             if (!player.HasCharacter)
             {
@@ -325,7 +325,7 @@ namespace Mirage
         /// <param name="obj">The object to spawn.</param>
         /// <param name="prefabHash">The prefabHash of the object to spawn. Used for custom spawn handlers.</param>
         /// <param name="owner">The connection that has authority over the object</param>
-        public void Spawn(NetworkIdentity identity, int prefabHash, NetworkPlayer owner = null)
+        public void Spawn(NetworkIdentity identity, int prefabHash, INetworkPlayer owner = null)
         {
             identity.PrefabHash = prefabHash;
             Spawn(identity, owner);
@@ -334,7 +334,7 @@ namespace Mirage
         /// <summary>
         /// Spawns the <paramref name="identity"/> and keeping owner as <see cref="NetworkIdentity.Owner"/>
         /// </summary>
-        public void Spawn(NetworkIdentity identity, NetworkPlayer owner)
+        public void Spawn(NetworkIdentity identity, INetworkPlayer owner)
         {
             identity.SetOwner(owner);
             Spawn(identity);
@@ -372,7 +372,7 @@ namespace Mirage
             identity.RebuildObservers(true);
         }
 
-        internal void SendSpawnMessage(NetworkIdentity identity, NetworkPlayer player)
+        internal void SendSpawnMessage(NetworkIdentity identity, INetworkPlayer player)
         {
             logger.Assert(!OnlySpawnOnAuthenticated || player.IsAuthenticated || identity.Visibility != DefaultVisibility,
                 "SendSpawnMessage should only be called if OnlySpawnOnAuthenticated is false, player is authenticated, or there is custom visibility");
@@ -449,7 +449,7 @@ namespace Mirage
             return values;
         }
 
-        internal void SendRemoveAuthorityMessage(NetworkIdentity identity, NetworkPlayer previousOwner)
+        internal void SendRemoveAuthorityMessage(NetworkIdentity identity, INetworkPlayer previousOwner)
         {
             if (logger.LogEnabled()) logger.Log($"Server SendRemoveAuthorityMessage: name={identity.Name} PrefabHash={identity.PrefabHash:X} SceneHash={identity.SceneHash:X} netId={identity.NetId}");
 
@@ -506,7 +506,7 @@ namespace Mirage
             identity.SendToRemoteObservers(new ObjectDestroyMessage { NetId = identity.NetId });
 
             identity.ClearObservers();
-            if (_server.LocalClientActive)
+            if (_server.IsHost)
             {
                 // see ClientObjectManager.UnSpawn for comments
                 if (identity.HasAuthority)
@@ -560,7 +560,7 @@ namespace Mirage
         /// </summary>
         /// <param name="player">The player to spawn objects for</param>
         // note: can't use optional param here because we need just NetworkPlayer version for event
-        public void SpawnVisibleObjects(NetworkPlayer player)
+        public void SpawnVisibleObjects(INetworkPlayer player)
         {
             SpawnVisibleObjects(player, false, (HashSet<NetworkIdentity>)null);
         }
@@ -570,7 +570,7 @@ namespace Mirage
         /// </summary>
         /// <param name="player">The player to spawn objects for</param>
         /// <param name="ignoreHasCharacter">If true will spawn visibile objects even if player does not have a spawned character yet</param>
-        public void SpawnVisibleObjects(NetworkPlayer player, bool ignoreHasCharacter)
+        public void SpawnVisibleObjects(INetworkPlayer player, bool ignoreHasCharacter)
         {
             SpawnVisibleObjects(player, ignoreHasCharacter, (HashSet<NetworkIdentity>)null);
         }
@@ -580,7 +580,7 @@ namespace Mirage
         /// </summary>
         /// <param name="player">The player to spawn objects for</param>
         /// <param name="ignoreHasCharacter">If true will spawn visibile objects even if player does not have a spawned character yet</param>
-        public void SpawnVisibleObjects(NetworkPlayer player, NetworkIdentity skip)
+        public void SpawnVisibleObjects(INetworkPlayer player, NetworkIdentity skip)
         {
             SpawnVisibleObjects(player, false, skip);
         }
@@ -591,7 +591,7 @@ namespace Mirage
         /// <param name="player">The player to spawn objects for</param>
         /// <param name="ignoreHasCharacter">If true will spawn visibile objects even if player does not have a spawned character yet</param>
         /// <param name="skip">NetworkIdentity to skip when spawning. Can be null</param>
-        public void SpawnVisibleObjects(NetworkPlayer player, bool ignoreHasCharacter, NetworkIdentity skip)
+        public void SpawnVisibleObjects(INetworkPlayer player, bool ignoreHasCharacter, NetworkIdentity skip)
         {
             _setCache.Clear();
             _setCache.Add(skip);
@@ -604,7 +604,7 @@ namespace Mirage
         /// <param name="player">The player to spawn objects for</param>
         /// <param name="ignoreHasCharacter">If true will spawn visibile objects even if player does not have a spawned character yet</param>
         /// <param name="skip">NetworkIdentity to skip when spawning. Can be null</param>
-        public void SpawnVisibleObjects(NetworkPlayer player, bool ignoreHasCharacter, HashSet<NetworkIdentity> skip)
+        public void SpawnVisibleObjects(INetworkPlayer player, bool ignoreHasCharacter, HashSet<NetworkIdentity> skip)
         {
             // todo Call player.RemoveAllVisibleObjects() first so that it will send spawn message for objects destroyed in scene change
 

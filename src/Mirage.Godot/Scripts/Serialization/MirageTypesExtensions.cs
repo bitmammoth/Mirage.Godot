@@ -16,7 +16,7 @@ namespace Mirage.Serialization
             }
             writer.WritePackedUInt32(value.NetId);
         }
-        public static void WriteNetworkBehaviour(this NetworkWriter writer, INetworkNode value)
+        public static void WriteNetworkBehaviour(this NetworkWriter writer, NetworkBehaviour value)
         {
             if (value == null)
             {
@@ -65,7 +65,7 @@ namespace Mirage.Serialization
                 : null;
         }
 
-        public static INetworkNode ReadNetworkBehaviour(this NetworkReader reader)
+        public static NetworkBehaviour ReadNetworkBehaviour(this NetworkReader reader)
         {
             var mirageReader = reader.ToMirageReader();
 
@@ -85,9 +85,10 @@ namespace Mirage.Serialization
             return identity.NetworkBehaviours[componentIndex];
         }
 
-        public static T ReadNetworkBehaviour<T>(this NetworkReader reader) where T : class, INetworkNode
+        public static T ReadNetworkBehaviour<T>(this NetworkReader reader) where T : NetworkBehaviour
         {
             return reader.ReadNetworkBehaviour() as T;
         }
+
     }
 }

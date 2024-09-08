@@ -17,9 +17,9 @@ namespace Mirage
     /// <para>NetworkConnection objects also act as observers for networked objects. When a connection is an observer of a networked object with a NetworkIdentity, then the object will be visible to corresponding client for the connection, and incremental state changes will be sent to the client.</para>
     /// <para>There are many virtual functions on NetworkConnection that allow its behaviour to be customized. NetworkClient and NetworkServer can both be made to instantiate custom classes derived from NetworkConnection by setting their networkConnectionClass member variable.</para>
     /// </remarks>
-    public sealed class NetworkPlayer : IMessageSender, IVisibilityTracker, IObjectOwner, ISceneLoader
+    public sealed class NetworkPlayer : INetworkPlayer
     {
-        private static readonly ILogger logger = LogFactory.GetLogger(typeof(NetworkPlayer));
+        private static readonly ILogger logger = LogFactory.GetLogger(typeof(INetworkPlayer));
 
         private readonly HashSet<NetworkIdentity> _visList = new HashSet<NetworkIdentity>();
 
@@ -143,6 +143,12 @@ namespace Mirage
             }
         }
 
+        /// <summary>Connect called on client, but server has not replied yet</summary>
+        public bool IsConnecting => _connection.State == ConnectionState.Connecting;
+
+        /// <summary>Server and Client are connected and can send messages</summary>
+        public bool IsConnected => _connection.State == ConnectionState.Connected;
+
         /// <summary>
         /// A list of the NetworkIdentity objects owned by this connection. This list is read-only.
         /// <para>This includes the player object for the connection - if it has localPlayerAuthority set, and any objects spawned with local authority or set with AssignLocalAuthority.</para>
@@ -150,6 +156,7 @@ namespace Mirage
         /// </summary>
         // IMPORTANT: this needs to be <NetworkIdentity>, not <uint netId>. fixes a bug where DestroyOwnedObjects wouldn't find
         //            the netId anymore: https://github.com/vis2k/Mirror/issues/1380 . Works fine with NetworkIdentity pointers though.
+
         private readonly HashSet<NetworkIdentity> _ownedObjects = new HashSet<NetworkIdentity>();
 
         /// <summary>

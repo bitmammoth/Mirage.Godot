@@ -17,12 +17,12 @@ namespace Mirage
         internal uint _netId;
         internal int _componentId;
 
-        internal INetworkNode _component;
+        internal NetworkBehaviour _component;
 
         internal uint NetId => _component != null ? _component.Identity.NetId : _netId;
         internal int ComponentId => _component != null ? _component.ComponentIndex : _componentId;
 
-        public INetworkNode Value
+        public NetworkBehaviour Value
         {
             get
             {
