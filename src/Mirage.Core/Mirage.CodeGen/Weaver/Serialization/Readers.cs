@@ -24,6 +24,18 @@ namespace Mirage.Weaver
             return module.ImportReference(method);
         }
 
+        protected override MethodReference GetNetworkBehaviourFunction(TypeReference typeReference)
+        {
+            var readMethod = GenerateReaderFunction(typeReference);
+            var worker = readMethod.worker;
+
+            worker.Append(worker.Create(OpCodes.Ldarg_0));
+            worker.Append(worker.Create<NetworkReader>(OpCodes.Call, (reader) => reader.ReadNetworkBehaviour()));
+            worker.Append(worker.Create(OpCodes.Castclass, typeReference));
+            worker.Append(worker.Create(OpCodes.Ret));
+            return readMethod.definition;
+        }
+
         protected override MethodReference GenerateEnumFunction(TypeReference typeReference)
         {
             var readMethod = GenerateReaderFunction(typeReference);
@@ -137,6 +149,39 @@ namespace Mirage.Weaver
         }
 
         // Initialize the local variable with a new instance
+        /*private void CreateNew(VariableDefinition variable, ILProcessor worker, TypeDefinition td)
+        {
+            var type = variable.VariableType;
+            if (type.IsValueType)
+            {
+                // structs are created with Initobj
+                worker.Append(worker.Create(OpCodes.Ldloca, variable));
+                worker.Append(worker.Create(OpCodes.Initobj, type));
+            }
+            else if (td.IsDerivedFrom<ScriptableObject>())
+            {
+                var createScriptableObjectInstance = worker.Body.Method.Module.ImportReference(() => ScriptableObject.CreateInstance<ScriptableObject>());
+                var genericInstanceMethod = new GenericInstanceMethod(createScriptableObjectInstance.GetElementMethod());
+                genericInstanceMethod.GenericArguments.Add(type);
+                worker.Append(worker.Create(OpCodes.Call, genericInstanceMethod));
+                worker.Append(worker.Create(OpCodes.Stloc, variable));
+            }
+            else
+            {
+                // classes are created with their constructor
+                var ctor = Resolvers.ResolveDefaultPublicCtor(type);
+                if (ctor == null)
+                {
+                    throw new SerializeFunctionException($"{type.Name} can't be deserialized because it has no default constructor", type);
+                }
+
+                var ctorRef = worker.Body.Method.Module.ImportReference(ctor);
+
+                worker.Append(worker.Create(OpCodes.Newobj, ctorRef));
+                worker.Append(worker.Create(OpCodes.Stloc, variable));
+            }
+        }*/
+        // Initialize the local variable with a new instance
         private void CreateNew(VariableDefinition variable, ILProcessor worker, TypeDefinition td)
         {
             var type = variable.VariableType;
@@ -161,7 +206,6 @@ namespace Mirage.Weaver
                 worker.Append(worker.Create(OpCodes.Stloc, variable));
             }
         }
-
         private void ReadAllFields(TypeReference type, ReadMethod readMethod)
         {
             var worker = readMethod.worker;

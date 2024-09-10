@@ -44,9 +44,9 @@ namespace Mirage.Authenticators.SessionId
         /// <summary>
         /// Key for player
         /// </summary>
-        private readonly Dictionary<NetworkPlayer, SessionKey> _playerKeys = new Dictionary<NetworkPlayer, SessionKey>();
+        private readonly Dictionary<INetworkPlayer, SessionKey> _playerKeys = new Dictionary<INetworkPlayer, SessionKey>();
 
-        protected override AuthenticationResult Authenticate(NetworkPlayer player, SessionKeyMessage message)
+        protected override AuthenticationResult Authenticate(INetworkPlayer player, SessionKeyMessage message)
         {
             if (message.SessionKey.Count == 0)
                 return AuthenticationResult.CreateFail(NO_KEY_ERROR);
@@ -65,7 +65,7 @@ namespace Mirage.Authenticators.SessionId
             return AuthenticationResult.CreateSuccess("Valid Session", this, sessionData);
         }
 
-        public ArraySegment<byte> CreateOrRefreshSession(NetworkPlayer player)
+        public ArraySegment<byte> CreateOrRefreshSession(INetworkPlayer player)
         {
             SessionData session;
             // get existing session

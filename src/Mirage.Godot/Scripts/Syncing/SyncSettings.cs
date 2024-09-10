@@ -18,7 +18,7 @@ namespace Mirage
         [FieldOffset(2)]
         public SyncTiming Timing;
         [FieldOffset(4)]
-        public float Interval;
+        public double Interval;
 
         public static readonly SyncSettings Default = new SyncSettings
         {
@@ -27,7 +27,7 @@ namespace Mirage
             Interval = 0.1f,
         };
 
-        public SyncSettings(SyncFrom from, SyncTo to, SyncTiming timing, float interval)
+        public SyncSettings(SyncFrom from, SyncTo to, SyncTiming timing, double interval)
         {
             From = from;
             To = to;
@@ -36,12 +36,12 @@ namespace Mirage
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void UpdateTime(ref float nextSyncTime, float now)
+        public void UpdateTime(ref double nextSyncTime, double now)
         {
             UpdateTime(Interval, Timing, ref nextSyncTime, now);
         }
 
-        public static void UpdateTime(float interval, SyncTiming timing, ref float nextSyncTime, float now)
+        public static void UpdateTime(double interval, SyncTiming timing, ref double nextSyncTime, double now)
         {
             switch (timing)
             {

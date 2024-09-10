@@ -133,7 +133,7 @@ namespace JamesFrowen.NetworkPositionSync
         /// <summary>
         /// Packs a float using <see cref="ZigZag"/> and <see cref="VarIntBlocksPacker"/>
         /// </summary>
-        public sealed class VarDoublePacker
+        /*public sealed class VarDoublePacker
         {
             private readonly int _blockSize;
             private readonly double _precision;
@@ -159,7 +159,7 @@ namespace JamesFrowen.NetworkPositionSync
                 var scaled = ZigZag.Decode(zig);
                 return scaled * _precision;
             }
-        }
+        }*/
     }
 
     //[Serializable]

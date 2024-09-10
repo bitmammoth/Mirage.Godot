@@ -2,18 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using Mirage.Logging;
-
+//FIXME: This is missing Application.quitting event
 namespace Mirage.SocketLayer
 {
     public interface ITime
     {
-        float Now { get; }
+        public double Now { get; }
     }
     internal class Time : ITime
     {
         private Stopwatch _stopwatch = Stopwatch.StartNew();
 
-        public float Now => _stopwatch.ElapsedMilliseconds / 1000f;
+        public double Now => _stopwatch.ElapsedMilliseconds / 1000;
     }
 
     public interface IPeer
@@ -62,6 +62,7 @@ namespace Mirage.SocketLayer
         /// is server listening on or connected to endpoint
         /// </summary>
         private bool _active;
+        public PoolMetrics PoolMetrics => _bufferPool.Metrics;
 
         public Peer(ISocket socket, int maxPacketSize, IDataHandler dataHandler, Config config = null, ILogger logger = null, Metrics metrics = null)
         {
@@ -79,6 +80,15 @@ namespace Mirage.SocketLayer
             _connectKeyValidator = new ConnectKeyValidator(_config.key);
 
             _bufferPool = new Pool<ByteBuffer>(ByteBuffer.CreateNew, maxPacketSize, _config.BufferPoolStartSize, _config.BufferPoolMaxSize, _logger);
+            //Application.quitting += Application_quitting;
+        }
+
+        private void Application_quitting()
+        {
+            // make sure peer closes itself when applications closes.
+            // this will make sure that disconnect Command is sent before applications closes
+            if (_active)
+                Close();
         }
 
         public void Bind(IEndPoint endPoint)
@@ -112,6 +122,7 @@ namespace Mirage.SocketLayer
                 return;
             }
             _active = false;
+            //Application.quitting -= Application_quitting;
 
             // send disconnect messages
             foreach (var conn in _connections.Values)
@@ -230,13 +241,20 @@ namespace Mirage.SocketLayer
         }
 
 
+
         private void ReceiveLoop()
         {
             using (var buffer = _bufferPool.Take())
             {
-                while (_socket.Poll())
+                // check active, because socket might have been closed by message handler
+                while (_active && _socket.Poll())
                 {
                     var length = _socket.Receive(buffer.array, out var receiveEndPoint);
+                    if (length < 0)
+                    {
+                        _logger.Log(LogType.Warning, $"Receive returned less than 0 bytes, length={length}");
+                        continue;
+                    }
 
                     // this should never happen. buffer size is only MTU, if socket returns higher length then it has a bug.
                     if (length > _maxPacketSize)
@@ -254,9 +272,6 @@ namespace Mirage.SocketLayer
                         _metrics?.OnReceiveUnconnected(length);
                         HandleNewConnection(receiveEndPoint, packet);
                     }
-
-                    // socket might have been closed by message handler
-                    if (!_active) { break; }
                 }
             }
         }
@@ -565,6 +580,9 @@ namespace Mirage.SocketLayer
             {
                 var removed = _connections.Remove(connection.EndPoint);
                 connection.State = ConnectionState.Destroyed;
+
+                if (connection is IDisposable disposable)
+                    disposable.Dispose();
 
                 // value should be removed from dictionary
                 if (!removed)

@@ -8,7 +8,7 @@ namespace Mirage.Authenticators
         [Export] public string ServerCode;
 
         // called on server to validate
-        protected override AuthenticationResult Authenticate(NetworkPlayer player, JoinMessage message)
+        protected override AuthenticationResult Authenticate(INetworkPlayer player, JoinMessage message)
         {
             if (ServerCode == message.ServerCode)
             {

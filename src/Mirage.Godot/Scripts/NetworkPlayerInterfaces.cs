@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Mirage.Authentication;
 using Mirage.SocketLayer;
 
 namespace Mirage
@@ -17,9 +18,9 @@ namespace Mirage
 
     // delegates to give names to variables in handles
     public delegate void MessageDelegate<in T>(T message);
-    public delegate void MessageDelegateWithPlayer<in T>(NetworkPlayer player, T message);
+    public delegate void MessageDelegateWithPlayer<in T>(INetworkPlayer player, T message);
     public delegate Task MessageDelegateAsync<in T>(T message);
-    public delegate Task MessageDelegateWithPlayerAsync<in T>(NetworkPlayer player, T message);
+    public delegate Task MessageDelegateWithPlayerAsync<in T>(INetworkPlayer player, T message);
 
 
     /// <summary>
@@ -28,7 +29,7 @@ namespace Mirage
     public interface IMessageReceiver
     {
         /// <summary>
-        /// Registers a handler for a network message that has NetworkPlayer and <typeparamref name="T"/> Message parameters
+        /// Registers a handler for a network message that has INetworkPlayer and <typeparamref name="T"/> Message parameters
         /// <para>
         /// When network message are sent, the first 2 bytes are the Id for the type <typeparamref name="T"/>.
         /// When message is received the <paramref name="handler"/> with the matching Id is found and invoked
@@ -40,7 +41,7 @@ namespace Mirage
         void RegisterHandler<T>(MessageDelegateWithPlayer<T> handler, bool allowUnauthenticated);
         void UnregisterHandler<T>();
         void ClearHandlers();
-        void HandleMessage(NetworkPlayer player, ArraySegment<byte> packet);
+        void HandleMessage(INetworkPlayer player, ArraySegment<byte> packet);
     }
 
     /// <summary>
@@ -88,18 +89,68 @@ namespace Mirage
     public interface IObjectOwner
     {
         event Action<NetworkIdentity> OnIdentityChanged;
+        /// <summary>
+        /// The main object owned by this player, normally the player's character
+        /// </summary>
         NetworkIdentity Identity { get; set; }
         bool HasCharacter { get; }
-        void RemoveOwnedObject(NetworkIdentity networkIdentity);
+
+        /// <summary>
+        /// All the objects owned by the player
+        /// </summary>
+        IReadOnlyCollection<NetworkIdentity> OwnedObjects { get; }
         void AddOwnedObject(NetworkIdentity networkIdentity);
+        void RemoveOwnedObject(NetworkIdentity networkIdentity);
+        /// <summary>
+        /// Removes all owned objects. This is useful to call when player disconnects to avoid objects being destroyed
+        /// </summary>
+        /// <param name="sendAuthorityChangeEvent">Should message be send to owner client? If player is disconnecting you should set this false</param>
+        void RemoveAllOwnedObject(bool sendAuthorityChangeEvent);
+        /// <summary>
+        /// Destroys or unspawns all owned objects.
+        /// This is called when the player is disconnects.
+        /// It will be called after <see cref="NetworkServer.Disconnected"/>, so Disconnected can be used to remove any owned objects from the list before they are destroyed.
+        /// </summary>
         void DestroyOwnedObjects();
+    }
+
+    /// <summary>
+    /// An object owned by a player that can: send/receive messages, have network visibility, be an object owner, authenticated permissions, and load scenes.
+    /// May be from the server to client or from client to server
+    /// </summary>
+    public interface INetworkPlayer : IMessageSender, IVisibilityTracker, IObjectOwner, ISceneLoader
+    {
+        IConnection Connection { get; }
+
+        /// <summary>
+        /// The IP address / URL / FQDN associated with the connection.
+        /// Can be useful for a game master to do IP Bans etc.
+        /// <para>
+        /// Best used to get concrete Endpoint type based on the <see cref="SocketFactory"/> being used
+        /// </para>
+        /// </summary>
+        IEndPoint Address { get; }
+
+        /// <summary>Connect called on client, but server has not replied yet</summary>
+        bool IsConnecting { get; }
+
+        /// <summary>Server and Client are connected and can send messages</summary>
+        bool IsConnected { get; }
+
+        PlayerAuthentication Authentication { get; }
+        void SetAuthentication(PlayerAuthentication authentication, bool allowReplace = false);
+        bool IsAuthenticated { get; }
+
+        /// <summary>True if this Player is the local player on the server or client</summary>
+        bool IsHost { get; }
+
+        void Disconnect();
+        void MarkAsDisconnected();
     }
 
     public interface ISceneLoader
     {
-        /// <summary>
-        ///     Scene is fully loaded and we now can do things with player.
-        /// </summary>
+        /// <summary>Scene is fully loaded and we now can do things with player.</summary>
         bool SceneIsReady { get; set; }
     }
 }

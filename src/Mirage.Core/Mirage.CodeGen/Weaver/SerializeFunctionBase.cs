@@ -145,8 +145,7 @@ namespace Mirage.Weaver
 
             return typeDef.HasCustomAttribute<WeaverWriteAsGenericAttribute>();
         }
-
-        private MethodReference GenerateFunction(TypeReference typeReference)
+private MethodReference GenerateFunction(TypeReference typeReference)
         {
             if (typeReference.IsByReference)
             {
@@ -220,7 +219,6 @@ namespace Mirage.Weaver
 
             return generated;
         }
-
         private SerializeFunctionException ThrowCantGenerate(TypeReference typeReference, string typeDescription = null)
         {
             var reasonStr = string.IsNullOrEmpty(typeDescription) ? string.Empty : $"{typeDescription} ";
@@ -248,6 +246,8 @@ namespace Mirage.Weaver
         /// </summary>
         /// <returns></returns>
         protected abstract MethodReference GetGenericFunction();
+
+        protected abstract MethodReference GetNetworkBehaviourFunction(TypeReference typeReference);
 
         protected abstract MethodReference GenerateEnumFunction(TypeReference typeReference);
         protected abstract MethodReference GenerateCollectionFunction(TypeReference typeReference, List<TypeReference> elementTypes, MethodReference collectionMethod);

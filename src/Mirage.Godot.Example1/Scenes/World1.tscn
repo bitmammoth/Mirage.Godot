@@ -34,7 +34,11 @@ point_count = 5
 
 [node name="Main" type="Node3D"]
 
-[node name="NetworkManager" parent="." instance=ExtResource("2_die1l")]
+[node name="NetworkManager" parent="." node_paths=PackedStringArray("NetworkScene") instance=ExtResource("2_die1l")]
+NetworkScene = NodePath("NetworkScene")
+
+[node name="ClientObjectManager" parent="NetworkManager" index="3" node_paths=PackedStringArray("SpawnParent")]
+SpawnParent = NodePath("../..")
 
 [node name="CharacterSpawner" type="Node" parent="NetworkManager" node_paths=PackedStringArray("Server", "ServerObjectManager")]
 script = ExtResource("2_pnjea")

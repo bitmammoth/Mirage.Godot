@@ -5,7 +5,7 @@ namespace Mirage.SocketLayer.ConnectionTrackers
     internal class DisconnectedTracker
     {
         private bool _isDisonnected;
-        private float _disconnectTime;
+        private double _disconnectTime;
         private readonly Config _config;
         private readonly Time _time;
 

@@ -16,7 +16,7 @@ namespace Mirage
             Server.Authenticated += Server_Authenticated;
         }
 
-        private void Server_Authenticated(NetworkPlayer player)
+        private void Server_Authenticated(INetworkPlayer player)
         {
             if (SpawnOnConnect)
             {

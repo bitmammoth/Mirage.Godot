@@ -24,6 +24,19 @@ namespace Mirage.Weaver
             return module.ImportReference(method);
         }
 
+        protected override MethodReference GetNetworkBehaviourFunction(TypeReference typeReference)
+        {
+            var writeMethod = GenerateWriterFunc(typeReference);
+            var worker = writeMethod.worker;
+
+            worker.Append(worker.Create(OpCodes.Ldarg_0));
+            worker.Append(worker.Create(OpCodes.Ldarg_1));
+            worker.Append(worker.Create(OpCodes.Call, (NetworkWriter writer) => writer.WriteNetworkBehaviour(default)));
+            worker.Append(worker.Create(OpCodes.Ret));
+
+            return writeMethod.definition;
+        }
+
         protected override MethodReference GenerateEnumFunction(TypeReference typeReference)
         {
             var writerMethod = GenerateWriterFunc(typeReference);

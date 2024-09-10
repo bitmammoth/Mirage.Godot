@@ -89,6 +89,31 @@ namespace Mirage.Serialization
             }
         }
 
+        [WeaverSerializeCollection]
+        public static void WriteDictionary<TKey, TValue>(this NetworkWriter writer, Dictionary<TKey, TValue> dictionary)
+        {
+            WriteCountPlusOne(writer, dictionary?.Count);
+
+            if (dictionary is null)
+                return;
+
+            foreach (var kvp in dictionary)
+            {
+                writer.Write(kvp.Key);
+                writer.Write(kvp.Value);
+            }
+        }
+
+        [WeaverSerializeCollection]
+        public static void WriteSpan<T>(this NetworkWriter writer, Span<T> span) => WriteReadOnlySpan<T>(writer, span);
+        [WeaverSerializeCollection]
+        public static void WriteReadOnlySpan<T>(this NetworkWriter writer, ReadOnlySpan<T> span)
+        {
+            var length = span.Length;
+            writer.WritePackedUInt32(checked((uint)length));
+            for (var i = 0; i < length; i++)
+                writer.Write(span[i]);
+        }
 
         /// <returns>array or null</returns>
         public static byte[] ReadBytesAndSize(this NetworkReader reader)
@@ -159,6 +184,40 @@ namespace Mirage.Serialization
             return array != null ? new ArraySegment<T>(array) : default;
         }
 
+        [WeaverSerializeCollection]
+        public static Dictionary<TKey, TValue> ReadDictionary<TKey, TValue>(this NetworkReader reader)
+        {
+            var hasValue = ReadCountPlusOne(reader, out var length);
+            if (!hasValue)
+                return null;
+
+            ValidateSize(reader, length);
+
+            var result = new Dictionary<TKey, TValue>();
+            for (var i = 0; i < length; i++)
+            {
+                var key = reader.Read<TKey>();
+                var value = reader.Read<TValue>();
+                result[key] = value;
+            }
+            return result;
+        }
+
+        [WeaverSerializeCollection]
+        public static Span<T> ReadSpan<T>(this NetworkReader reader)
+        {
+            var length = checked((int)reader.ReadPackedUInt32());
+            ValidateSize(reader, length);
+
+            var result = new T[length]; // todo remove allocation
+            for (var i = 0; i < length; i++)
+            {
+                result[i] = reader.Read<T>();
+            }
+            return result;
+        }
+        [WeaverSerializeCollection]
+        public static ReadOnlySpan<T> ReadReadOnlySpan<T>(this NetworkReader reader) => ReadSpan<T>(reader);
 
         /// <summary>Writes null as 0, and all over values as +1</summary>
         /// <param name="count">The real count or null if collection is is null</param>

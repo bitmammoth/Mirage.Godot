@@ -19,7 +19,7 @@ namespace Example1
             if (!Identity.IsSpawned)
                 return;
 
-            if ((this.IsServer() && Identity.Owner == null) || this.HasAuthority())
+            if ((Identity.IsServer && Identity.Owner == null) || Identity.HasAuthority)
             {
                 if (logger.LogEnabled()) logger.Log($"CheckChanged: {Identity.NetId}");
                 CheckChanged();
@@ -40,7 +40,7 @@ namespace Example1
                 || currentRot.AngleTo(_previousRot) > 0.01f
                 )
             {
-                if (this.IsServer())
+                if (Identity.IsServer)
                 {
                     SendUpdate(currentPos, currentRot);
                 }

@@ -13,7 +13,7 @@ namespace Mirage.Authentication
         public INetworkAuthenticator Authenticator { get; private set; }
 
         /// <summary>
-        /// Auth data from Success, will be set on NetworkPlayer
+        /// Auth data from Success, will be set on INetworkPlayer
         /// </summary>
         public object Data { get; private set; }
         /// <summary>

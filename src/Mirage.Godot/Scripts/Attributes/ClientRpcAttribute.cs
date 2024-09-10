@@ -2,6 +2,7 @@ using System;
 
 namespace Mirage
 {
+
     /// <summary>
     /// The server uses a Remote Procedure Call (RPC) to run this function on specific clients.
     /// <para>Note that if you set the target as Connection, you need to pass a specific connection as a parameter of your method</para>
@@ -12,7 +13,8 @@ namespace Mirage
         public Channel channel = Channel.Reliable;
         public RpcTarget target = RpcTarget.Observers;
         public bool excludeOwner;
-
+        /// <summary>stops method being called on host/server</summary>
+        public bool excludeHost;
     }
 
     /// <summary>

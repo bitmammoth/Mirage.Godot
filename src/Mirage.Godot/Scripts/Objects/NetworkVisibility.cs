@@ -7,7 +7,7 @@ namespace Mirage
     /// </summary>
     public abstract partial class NetworkVisibility : NetworkBehaviour, INetworkVisibility
     {
-        public delegate void VisibilityChanged(NetworkPlayer player, bool visible);
+        public delegate void VisibilityChanged(INetworkPlayer player, bool visible);
 
         /// <summary>
         /// Invoked on server when visibility changes for player
@@ -16,7 +16,7 @@ namespace Mirage
         /// </summary>
         public event VisibilityChanged OnVisibilityChanged;
 
-        internal void InvokeVisibilityChanged(NetworkPlayer player, bool visible)
+        internal void InvokeVisibilityChanged(INetworkPlayer player, bool visible)
         {
             OnVisibilityChanged?.Invoke(player, visible);
         }
@@ -27,7 +27,7 @@ namespace Mirage
         /// </summary>
         /// <param name="player">Network connection of a player.</param>
         /// <returns>True if the player can see this object.</returns>
-        public abstract bool OnCheckObserver(NetworkPlayer player);
+        public abstract bool OnCheckObserver(INetworkPlayer player);
 
         /// <summary>
         /// Callback used by the visibility system to (re)construct the set of observers that can see this object.
@@ -39,9 +39,9 @@ namespace Mirage
         /// </summary>
         /// <param name="observers">The new set of observers for this object.</param>
         /// <param name="initialize">True if the set of observers is being built for the first time.</param>
-        public virtual void OnRebuildObservers(HashSet<NetworkPlayer> observers, bool initialize)
+        public virtual void OnRebuildObservers(HashSet<INetworkPlayer> observers, bool initialize)
         {
-            foreach (var player in Identity.Server.Players)
+            foreach (var player in Identity.Server.AuthenticatedPlayers)
             {
                 if (OnCheckObserver(player))
                 {

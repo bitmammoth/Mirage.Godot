@@ -62,13 +62,13 @@ namespace Mirage.Weaver.SyncVars
             if (typeReference.Is<NetworkIdentity>())
             {
                 // change the type of the field to a wrapper NetworkIdentitySyncvar
-                wrapType = Module.ImportReference<NetworkIdentitySyncvar>();
+                wrapType = Module.ImportReference<NetworkIdentitySyncVar>();
                 return true;
             }
 
-            if (typeReference.Resolve().IsDerivedFrom<INetworkNode>())
+            if (typeReference.Resolve().IsDerivedFrom<NetworkBehaviour>())
             {
-                wrapType = Module.ImportReference<NetworkBehaviorSyncvar>();
+                wrapType = Module.ImportReference<NetworkBehaviourSyncVar>();
                 return true;
             }
 

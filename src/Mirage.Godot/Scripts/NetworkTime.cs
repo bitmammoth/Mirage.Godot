@@ -1,9 +1,29 @@
 using System;
 using Mirage.Logging;
+using Mirage.SocketLayer;
 using Stopwatch = System.Diagnostics.Stopwatch;
 
 namespace Mirage
 {
+    public static class Time
+    {
+        static double start;
+
+        static double GetNow() => Stopwatch.GetTimestamp() / (double)Stopwatch.Frequency;
+
+        static Time()
+        {
+            start = GetNow();
+        }
+
+        public static float time => (float)(GetNow() - start);
+
+        public static double timeAsDouble;
+
+        // NOTE: This will have to be incremented manually!
+        public static int frameCount = 0;
+
+    }
     /// <summary>
     /// Synchronize time between the server and the clients
     /// </summary>
@@ -15,13 +35,13 @@ namespace Mirage
         /// how often are we sending ping messages
         /// used to calculate network time and RTT
         /// </summary>
-        public float PingInterval = 2.0f;
-
+        public double PingInterval = 2.0;
+        public double LocalFrameTime { get; private set; }
         /// <summary>
         /// average out the last few results from Ping
         /// </summary>
         public int PingWindowSize = 10;
-        private double _nextPingTime;
+        private double _lastPingTime;
 
         // Date and time when the application started
         private readonly Stopwatch _stopwatch = new Stopwatch();
@@ -34,22 +54,14 @@ namespace Mirage
         private ExponentialMovingAverage _rtt = new ExponentialMovingAverage(10);
         private ExponentialMovingAverage _offset = new ExponentialMovingAverage(10);
         private double _time;
+        private int _lastFrame;
 
         // the true offset guaranteed to be in this range
         private double _offsetMin = double.MinValue;
         private double _offsetMax = double.MaxValue;
 
-        /// <summary>
-        /// Time at the start of the frame
-        /// </summary>
-        public float LocalFrameTime { get; private set; }
-        public double LocalFrameTimeAsDouble { get; private set; }
-
-        /// <summary>
-        /// Note: local and sever time may be very differerent because they are based off when each instance was started
-        /// </summary>
-        /// <returns></returns>
-        public double LocalTime() => _stopwatch.ElapsedMilliseconds / 1000.0;
+        // returns the clock time _in this system_
+        private double LocalTime() => _stopwatch.Elapsed.TotalSeconds;
 
         public void Reset()
         {
@@ -59,29 +71,32 @@ namespace Mirage
             _offsetMax = double.MaxValue;
         }
 
-        internal void UpdateFrameTime()
-        {
-            LocalFrameTimeAsDouble = LocalTime();
-            LocalFrameTime = (float)LocalFrameTimeAsDouble;
-        }
         internal void UpdateClient(IMessageSender client)
         {
-            var now = LocalTime();
-            if (now > _nextPingTime)
+            if (Time - _lastPingTime >= PingInterval)
             {
-                var pingMessage = new NetworkPingMessage
-                {
-                    ClientTime = LocalTime()
-                };
-                client.Send(pingMessage, Channel.Unreliable);
-                _nextPingTime = now + PingInterval;
+                PingNow(client);
             }
+        }
+
+        /// <summary>
+        /// Sends <see cref="NetworkPingMessage"/> right away ignoring lastPingTime
+        /// </summary>
+        /// <param name="client"></param>
+        public void PingNow(IMessageSender client)
+        {
+            var pingMessage = new NetworkPingMessage
+            {
+                ClientTime = LocalTime()
+            };
+            client.Send(pingMessage, Channel.Unreliable);
+            _lastPingTime = Time;
         }
 
         // executed at the server when we receive a ping message
         // reply with a pong containing the time from the client
         // and time from the server
-        internal void OnServerPing(NetworkPlayer player, NetworkPingMessage msg)
+        internal void OnServerPing(INetworkPlayer player, NetworkPingMessage msg)
         {
             if (logger.LogEnabled()) logger.Log("OnPingServerMessage  conn=" + player);
 
@@ -157,12 +172,20 @@ namespace Mirage
         /// <para>in other words,  if the server is running for 2 months,
         /// and you cast down to float,  then the time will jump in 0.4s intervals.</para>
         /// </remarks>
-        public double ServerTime
+        public double Time
         {
             get
             {
-                // Notice _offset is 0 at the server
-                _time = LocalTime() - _offset.Value;
+                // paul: LocalTime is very expensive
+                // so cache the time for the duration of the frame
+                // if someone asks for .time several times in a frame this has significant impact
+                // this also makes it more consistent with Time.time
+                if (_lastFrame != Mirage.Time.frameCount)
+                {
+                    // Notice _offset is 0 at the server
+                    _time = LocalTime() - _offset.Value;
+                    _lastFrame = Mirage.Time.frameCount;
+                }
                 return _time;
 
             }

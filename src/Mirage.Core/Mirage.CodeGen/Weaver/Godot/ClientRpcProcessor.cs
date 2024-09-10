@@ -80,6 +80,7 @@ namespace Mirage.Weaver
             var target = clientRpcAttr.GetField(nameof(ClientRpcAttribute.target), RpcTarget.Observers);
             var channel = clientRpcAttr.GetField(nameof(ClientRpcAttribute.channel), 0);
             var excludeOwner = clientRpcAttr.GetField(nameof(ClientRpcAttribute.excludeOwner), false);
+            var excludeHost = clientRpcAttr.GetField(nameof(ClientRpcAttribute.excludeHost), false);
 
             var rpc = SubstituteMethod(md);
 
@@ -89,7 +90,8 @@ namespace Mirage.Weaver
             // {
             //    call the body
             // }
-            CallBody(worker, rpc, target);
+            if (!excludeHost)
+                CallBody(worker, rpc, target, excludeOwner);
 
             // NetworkWriter writer = NetworkWriterPool.GetWriter()
             var writer = md.AddLocal<PooledNetworkWriter>();
@@ -113,7 +115,7 @@ namespace Mirage.Weaver
             // see ClientRpcSender.Send methods
             if (target == RpcTarget.Observers)
                 worker.Append(worker.Create(excludeOwner.OpCode_Ldc()));
-            else if (target == RpcTarget.Player && HasFirstParameter<NetworkPlayer>(md))
+            else if (target == RpcTarget.Player && HasFirstParameter<INetworkPlayer>(md))
                 worker.Append(worker.Create(OpCodes.Ldarg_1));
             else // owner, or Player with no arg
                 worker.Append(worker.Create(OpCodes.Ldnull));
@@ -154,7 +156,7 @@ namespace Mirage.Weaver
 
 
 
-        private void InvokeLocally(ILProcessor worker, RpcTarget target, Action body)
+        private void InvokeLocally(ILProcessor worker, RpcTarget target, bool excludeOwner, Action body)
         {
             // if (IsLocalClient) {
             var endif = worker.Create(OpCodes.Nop);
@@ -170,8 +172,9 @@ namespace Mirage.Weaver
             else
                 worker.Append(worker.Create(OpCodes.Ldnull));
 
+            worker.Append(worker.Create(excludeOwner.OpCode_Ldc()));
             // call function
-            worker.Append(worker.Create(OpCodes.Call, () => ClientRpcSender.ShouldInvokeLocally(default, default, default)));
+            worker.Append(worker.Create(OpCodes.Call, () => ClientRpcSender.ShouldInvokeLocally(default, default, default, default)));
             worker.Append(worker.Create(OpCodes.Brfalse, endif));
 
             body();
@@ -181,9 +184,9 @@ namespace Mirage.Weaver
 
         }
 
-        private void CallBody(ILProcessor worker, MethodDefinition rpc, RpcTarget target)
+        private void CallBody(ILProcessor worker, MethodDefinition rpc, RpcTarget target, bool excludeOwner)
         {
-            InvokeLocally(worker, target, () =>
+            InvokeLocally(worker, target, excludeOwner, () =>
             {
                 InvokeBody(worker, rpc);
                 // if target is owner or player we can return after invoking locally
@@ -203,14 +206,15 @@ namespace Mirage.Weaver
             for (var i = 0; i < rpc.Parameters.Count; i++)
             {
                 var parameter = rpc.Parameters[i];
-                if (parameter.ParameterType.Is<NetworkPlayer>())
+                if (parameter.ParameterType.Is<INetworkPlayer>())
                 {
                     // when a client rpc is invoked in host mode
-                    // and it receives a NetworkPlayer,  we
+                    // and it receives a INetworkPlayer,  we
                     // need to change the value we pass to the
                     // local connection to the server
                     worker.Append(worker.Create(OpCodes.Ldarg_0));
-                    worker.Append(worker.Create(OpCodes.Call, () => NetworkNodeExtensions.GetClientPlayer(default)));
+                    worker.Append(worker.Create(OpCodes.Call, (NetworkBehaviour nb) => nb.Client));
+                    worker.Append(worker.Create(OpCodes.Callvirt, (NetworkClient nc) => nc.Player));
                 }
                 else
                 {
@@ -255,7 +259,7 @@ namespace Mirage.Weaver
         private void ValidateAttribute(MethodDefinition md, CustomAttribute clientRpcAttr)
         {
             var target = clientRpcAttr.GetField(nameof(ClientRpcAttribute.target), RpcTarget.Observers);
-            if (target == RpcTarget.Player && !HasFirstParameter<NetworkPlayer>(md))
+            if (target == RpcTarget.Player && !HasFirstParameter<INetworkPlayer>(md))
             {
                 throw new RpcException("ClientRpc with RpcTarget.Player needs a network player parameter", md);
             }

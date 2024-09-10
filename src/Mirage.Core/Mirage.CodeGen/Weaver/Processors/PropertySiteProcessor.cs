@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Godot;
 using Mirage.CodeGen;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -25,9 +26,22 @@ namespace Mirage.Weaver
             CodePass.ForEachInstruction(moduleDef, WeavedMethods, ProcessInstruction);
         }
 
-        private static bool WeavedMethods(MethodDefinition md) =>
-                        md.Name != ".cctor" &&
-                        !md.IsConstructor;
+        private static bool WeavedMethods(MethodDefinition md)
+        {
+            if (md.Name == ".cctor")
+                return false;
+            if (md.Name == NetworkBehaviourProcessor.ProcessedFunctionName)
+                return false;
+
+            // dont use network get/set inside unity consturctors
+            // this is because they will try to set dirtyBit and throw unity errors
+            if (md.DeclaringType.IsDerivedFrom<Node>() && md.IsConstructor)
+                return false;
+
+            // note: Constructor for non-unity types should be safe to use, for example get/set a sync var on a NB from without a struct
+
+            return true;
+        }
 
         // replaces syncvar write access with the NetworkXYZ.get property calls
         private void ProcessInstructionSetterField(Instruction i, FieldReference opField)

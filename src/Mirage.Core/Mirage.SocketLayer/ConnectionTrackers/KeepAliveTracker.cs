@@ -4,7 +4,7 @@ namespace Mirage.SocketLayer.ConnectionTrackers
 {
     internal class KeepAliveTracker
     {
-        private float _lastSendTime = float.MinValue;
+        private double _lastSendTime = double.MinValue;
         private readonly Config _config;
         private readonly Time _time;
 

@@ -1,3 +1,4 @@
+using System;
 using Mirage.Serialization;
 
 namespace Mirage
@@ -7,7 +8,7 @@ namespace Mirage
     /// backing struct for a NetworkIdentity when used as a syncvar
     /// the weaver will replace the syncvar with this struct.
     /// </summary>
-    public struct NetworkIdentitySyncvar
+    public struct NetworkIdentitySyncVar : IEquatable<NetworkIdentitySyncVar>
     {
         /// <summary>
         /// The network client that spawned the parent object
@@ -27,7 +28,7 @@ namespace Mirage
                 if (_identity != null)
                     return _identity;
 
-                if (_objectLocator is IObjectLocator locator && locator.TryGetIdentity(NetId, out var result))
+                if (_objectLocator != null && _objectLocator.TryGetIdentity(NetId, out var result))
                 {
                     return result;
                 }
@@ -42,28 +43,33 @@ namespace Mirage
                 _identity = value;
             }
         }
+
+        public bool Equals(NetworkIdentitySyncVar other)
+        {
+            // NetId is the current ID or the saved ID
+            // so we can just compare that to see if values are equal
+            return NetId == other.NetId;
+        }
     }
 
 
     public static class NetworkIdentitySerializers
     {
-        public static void WriteNetworkIdentitySyncVar(this NetworkWriter writer, NetworkIdentitySyncvar id)
+        public static void WriteNetworkIdentitySyncVar(this NetworkWriter writer, NetworkIdentitySyncVar id)
         {
             writer.WritePackedUInt32(id.NetId);
         }
 
-        public static NetworkIdentitySyncvar ReadNetworkIdentitySyncVar(this NetworkReader reader)
+        public static NetworkIdentitySyncVar ReadNetworkIdentitySyncVar(this NetworkReader reader)
         {
             var mirageReader = reader.ToMirageReader();
 
             var netId = reader.ReadPackedUInt32();
 
             NetworkIdentity identity = null;
+            mirageReader.ObjectLocator?.TryGetIdentity(netId, out identity);
 
-            if (mirageReader.ObjectLocator is IObjectLocator locator)
-                locator.TryGetIdentity(netId, out identity);
-
-            return new NetworkIdentitySyncvar
+            return new NetworkIdentitySyncVar
             {
                 _objectLocator = mirageReader.ObjectLocator,
                 _netId = netId,

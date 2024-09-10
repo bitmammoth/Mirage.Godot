@@ -69,6 +69,6 @@ namespace Mirage.Collections
         /// <para>This will only be called once, the first time the object is spawned (similar to unity's awake call)</para>
         /// </summary>
         /// <param name="networkBehaviour"></param>
-        void SetNetworkBehaviour(INetworkNode networkBehaviour);
+        void SetNetworkBehaviour(NetworkBehaviour networkBehaviour);
     }
 }

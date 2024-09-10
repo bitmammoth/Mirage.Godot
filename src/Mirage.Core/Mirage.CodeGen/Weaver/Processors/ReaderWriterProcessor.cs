@@ -301,7 +301,7 @@ namespace Mirage.Weaver
                 method.Is<IMessageSender>(nameof(IMessageSender.Send)) ||
                 method.Is<IMessageReceiver>(nameof(IMessageReceiver.RegisterHandler)) ||
                 method.Is<IMessageReceiver>(nameof(IMessageReceiver.UnregisterHandler)) ||
-                method.Is<NetworkPlayer>(nameof(NetworkPlayer.Send)) ||
+                method.Is<INetworkPlayer>(nameof(INetworkPlayer.Send)) ||
                 method.Is<MessageHandler>(nameof(MessageHandler.RegisterHandler)) ||
                 method.Is<MessageHandler>(nameof(MessageHandler.UnregisterHandler)) ||
                 method.Is<NetworkClient>(nameof(NetworkClient.Send)) ||

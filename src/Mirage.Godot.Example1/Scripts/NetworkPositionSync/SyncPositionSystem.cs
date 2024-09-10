@@ -316,9 +316,9 @@ public partial class SyncPositionSystem : Node
         ClearDirtySet();
     }
 
-    private Dictionary<NetworkPlayer, PooledNetworkWriter> writerPool = new Dictionary<NetworkPlayer, PooledNetworkWriter>();
+    private Dictionary<INetworkPlayer, PooledNetworkWriter> writerPool = new Dictionary<INetworkPlayer, PooledNetworkWriter>();
 
-    private PooledNetworkWriter GetWriterFromPool(double time, NetworkPlayer player)
+    private PooledNetworkWriter GetWriterFromPool(double time, INetworkPlayer player)
     {
         if (!writerPool.TryGetValue(player, out var writer))
         {
@@ -385,7 +385,7 @@ public partial class SyncPositionSystem : Node
     /// </summary>
     /// <param name="arg1"></param>
     /// <param name="arg2"></param>
-    internal void ServerHandleNetworkPositionMessage(NetworkPlayer _, NetworkPositionSingleMessage msg)
+    internal void ServerHandleNetworkPositionMessage(INetworkPlayer _, NetworkPositionSingleMessage msg)
     {
         using (var reader = NetworkReaderPool.GetReader(msg.payload, null))
         {

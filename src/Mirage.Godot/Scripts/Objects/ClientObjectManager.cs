@@ -22,16 +22,17 @@ namespace Mirage
         public NetworkClient Client => _client;
 
         /// <summary>
-        /// The node that will be the parent when spawning new PackedScene
-        /// <para>if null, the Tree's root node is used instead</para>
-        /// </summary>
-        [Export] public Node SpawnParent;
-
-        /// <summary>
         /// List of prefabs that will be registered with the spawning system.
         /// <para>For each of these prefabs, ClientManager.RegisterPrefab() will be automatically invoke.</para>
         /// </summary>
-        [Export] public PackedScene[] PackedScenes;
+        //[Header("Prefabs")]
+        public List<PackedScene> spawnPrefabs = new List<PackedScene>();
+
+        /// <summary>
+        /// A scriptable object that holds all the prefabs that will be registered with the spawning system.
+        /// <para>For each of these prefabs, ClientManager.RegisterPrefab() will be automatically invoked.</para>
+        /// </summary>
+        public NetworkPrefabs NetworkPrefabs;
 
         /// <summary>
         /// This is a dictionary of the prefabs and deligates that are registered on the client with ClientScene.RegisterPrefab().
@@ -50,6 +51,12 @@ namespace Mirage
         /// </summary>
         public readonly Dictionary<ulong, NetworkIdentity> spawnableObjects = new Dictionary<ulong, NetworkIdentity>();
 
+        /// <summary>
+        /// The node that will be the parent when spawning new PackedScene
+        /// <para>if null, the Tree's root node is used instead</para>
+        /// </summary>
+        [Export] public Node SpawnParent;
+
         internal void ClientStarted(NetworkClient client)
         {
             if (_client != null && _client != client)
@@ -58,13 +65,14 @@ namespace Mirage
             _client = client;
             _client.Disconnected.AddListener(OnClientDisconnected);
 
-            RegisterPrefabs(PackedScenes, true);
+            RegisterPrefabs(spawnPrefabs, true);
+            RegisterPrefabs(NetworkPrefabs?.Prefabs, true);
 
             // prepare objects right away so objects in first scene can be spawned
             // if user changes scenes without NetworkSceneManager then they will need to manually call it again
             PrepareToSpawnSceneObjects();
 
-            if (_client.IsLocalClient)
+            if (_client.IsHost)
             {
                 RegisterHostHandlers();
             }
@@ -76,8 +84,8 @@ namespace Mirage
 
         private void OnClientDisconnected(ClientStoppedReason reason)
         {
-            ClearSpawners();
             DestroyAllClientObjects();
+            ClearSpawners();
 
             // reset for next run
             _client.Disconnected.RemoveListener(OnClientDisconnected);
@@ -193,7 +201,7 @@ namespace Mirage
                     return handler;
                 }
             }
-
+            GD.PushWarning($"No handler for {prefabHash:X}");
             ThrowMissingHandler(prefabHash);
             return null;
         }
@@ -228,12 +236,16 @@ namespace Mirage
         /// </summary>
         /// <param name="identity">A Prefab that will be spawned.</param>
         // todo does inheritdoc here? instead of having duplicate doc comments for each RegisterPrefab
-        public void RegisterPrefab(PackedScene identity, int prefabHash)
+        public void RegisterPrefab(PackedScene identity, int newPrefabHash)
         {
-            ThrowIfExists(prefabHash, identity);
+            if (identity == null)
+                throw new ArgumentNullException(nameof(identity));
 
-            if (logger.LogEnabled()) logger.Log($"Registering prefab '{identity.ResourceName}' as asset:{prefabHash:X}");
-            _handlers[prefabHash] = new SpawnHandler(identity);
+            ThrowIfZeroHash(newPrefabHash);
+            ThrowIfExists(newPrefabHash);
+
+            if (logger.LogEnabled()) logger.Log($"Registering prefab '{identity.ResourcePath}' as asset:{newPrefabHash:X}");
+            _handlers[newPrefabHash] = new SpawnHandler(identity);
         }
 
         /// <summary>
@@ -242,12 +254,13 @@ namespace Mirage
         /// </summary>
         /// <param name="identity">Prefab to add handler for</param>
         /// <param name="unspawnHandler">A method to use as a custom un-spawnhandler on clients.</param>
-        public void RegisterUnspawnHandler(PackedScene identity, UnSpawnDelegate unspawnHandler)
+        public void RegisterUnspawnHandler(NetworkIdentity identity, UnSpawnDelegate unspawnHandler)
         {
             if (unspawnHandler == null)
                 throw new ArgumentNullException(nameof(unspawnHandler));
 
-            var prefabHash = PrefabHashHelper.GetPrefabHash(identity);
+            ThrowIfZeroHash(identity);
+            var prefabHash = identity.PrefabHash;
             if (!_handlers.ContainsKey(prefabHash))
             {
                 throw new InvalidOperationException($"No prefab with hash {prefabHash:X}. Prefab must be registered before adding unspawn handler");
@@ -258,7 +271,7 @@ namespace Mirage
                 throw new InvalidOperationException($"Existing handler for {prefabHash:X} was not a prefab. Prefab must be registered before adding unspawn handler");
             }
 
-            if (logger.LogEnabled()) logger.Log($"Registering custom prefab '{identity.ResourceName}' as asset:{prefabHash:X} {unspawnHandler.Method.Name}");
+            if (logger.LogEnabled()) logger.Log($"Registering custom prefab '{identity.Name}' as asset:{prefabHash:X} {unspawnHandler.Method.Name}");
 
             _handlers[prefabHash].AddUnspawnHandler(unspawnHandler);
         }
@@ -273,8 +286,7 @@ namespace Mirage
 
             _handlers.Remove(prefabHash);
         }
-
-        /// <summary>
+                /// <summary>
         /// This is an advanced spawning function that registers a custom prefabHash with the UNET spawning system.
         /// <para>This can be used to register custom spawning methods for an prefabHash - instead of the usual method of registering spawning methods for a prefab. This should be used when no prefab exists for the spawned objects - such as when they are constructed dynamically at runtime from configuration data.</para>
         /// </summary>
@@ -295,6 +307,7 @@ namespace Mirage
             _handlers[prefabHash] = new SpawnHandler(spawnHandler, unspawnHandler);
         }
 
+
         private void ValidateRegisterSpawnHandler(int prefabHash, Delegate spawnHandler, UnSpawnDelegate unspawnHandler)
         {
             if (spawnHandler == null)
@@ -310,7 +323,6 @@ namespace Mirage
                 logger.Log($"RegisterSpawnHandler PrefabHash:'{prefabHash:X}' Spawn:{spawnName} UnSpawn:{unspawnName}");
             }
         }
-
         /// <summary>
         /// Removes a registered spawn handler function that was registered with ClientScene.RegisterHandler().
         /// </summary>
@@ -341,6 +353,13 @@ namespace Mirage
             if (prefabHash == 0)
                 throw new ArgumentException("prefabHash is zero", nameof(prefabHash));
         }
+        private static void ThrowIfZeroHash(NetworkIdentity identity)
+        {
+            if (identity.PrefabHash == 0)
+            {
+                throw new ArgumentException($"prefabHash is zero on {identity.Name}", nameof(identity));
+            }
+        }
         private static void ThrowMissingHandler(int prefabHash)
         {
             throw new SpawnObjectException($"No prefab for {prefabHash:X}. did you forget to add it to the ClientObjectManager?");
@@ -370,7 +389,7 @@ namespace Mirage
             // have to store netid, so we can remove it from world, this is because NetworkReset will clear it
             var netId = identity.NetId;
 
-            logger.Assert(!_client.IsLocalClient, "UnSpawn should not be called in host mode");
+            logger.Assert(!_client.IsHost, "UnSpawn should not be called in host mode");
             // it is useful to remove authority when destroying the object
             // this can be useful to clean up stuff after a local player is destroyed
             // call before StopClient, but dont reset the HasAuthority bool, people might want to use HasAuthority from stopclient or destroy
@@ -415,7 +434,7 @@ namespace Mirage
         public void DestroyAllClientObjects()
         {
             // dont destroy objects if we are server
-            if (_client.IsLocalClient)
+            if (_client.IsHost)
             {
                 if (logger.LogEnabled()) logger.Log("Skipping DestroyAllClientObjects because we are host client");
                 return;
@@ -434,14 +453,14 @@ namespace Mirage
             }
             _client.World.ClearSpawnedObjects();
         }
-
         private void ApplySpawnPayload(NetworkIdentity identity, SpawnMessage msg)
         {
-            identity.PrefabHash = msg.PrefabHash;
+            if (msg.PrefabHash.HasValue)
+                identity.PrefabHash = msg.PrefabHash.Value;
 
             identity.SetClientValues(this, msg);
 
-            if (msg.IsMainCharacter)
+            if (msg.IsLocalPlayer)
                 InternalAddCharacter(identity);
 
             // deserialize components if any payload
@@ -462,7 +481,7 @@ namespace Mirage
 
         internal void OnSpawn(SpawnMessage msg)
         {
-            if (msg.PrefabHash == default && msg.SceneHash == default)
+            if (msg.PrefabHash == null && msg.SceneId == null)
                 throw new SpawnObjectException($"Empty prefabHash and sceneId for netId: {msg.NetId}");
 
             if (logger.LogEnabled()) logger.Log($"[ClientObjectManager] Spawn: {msg}");
@@ -473,13 +492,13 @@ namespace Mirage
             if (!existing)
             {
                 //is the object on the prefab or scene object lists?
-                if (msg.SceneHash.HasValue)
+                if (msg.SceneId.HasValue)
                 {
                     identity = SpawnSceneObject(msg);
                 }
-                else
+                else if (msg.PrefabHash.HasValue)
                 {
-                    var handler = GetSpawnHandler(msg.PrefabHash);
+                    var handler = GetSpawnHandler(msg.PrefabHash.Value);
                     if (handler.IsAsyncSpawn())
                     {
                         OnSpawnAsync(handler.HandlerAsync, msg).Forget();
@@ -580,20 +599,19 @@ namespace Mirage
 
             return clone.GetFirstChild<NetworkIdentity>();
         }
-
         internal NetworkIdentity SpawnSceneObject(SpawnMessage msg)
         {
-            var sceneId = PrefabHashHelper.ToSceneId(msg.SceneHash, msg.PrefabHash).Value;
+            var sceneId = msg.SceneId.Value;
 
             if (spawnableObjects.TryGetValue(sceneId, out var foundSceneObject))
             {
                 spawnableObjects.Remove(sceneId);
-                if (logger.LogEnabled()) logger.Log($"[ClientObjectManager] Found scene object for netid:{msg.NetId}, sceneId:{sceneId:X}, obj:{foundSceneObject}");
+                if (logger.LogEnabled()) logger.Log($"[ClientObjectManager] Found scene object for netid:{msg.NetId}, sceneId:{msg.SceneId.Value:X}, obj:{foundSceneObject}");
                 return foundSceneObject;
             }
 
             // failed to spawn
-            var errorMsg = $"Failed to spawn scene object sceneId={sceneId:X}";
+            var errorMsg = $"Failed to spawn scene object sceneId={msg.SceneId:X}";
             // dump the whole spawnable objects dict for easier debugging
             if (logger.LogEnabled())
             {
@@ -674,7 +692,7 @@ namespace Mirage
         {
             if (_client.World.TryGetIdentity(msg.NetId, out var localObject))
             {
-                if (msg.IsMainCharacter)
+                if (msg.IsLocalPlayer)
                     InternalAddCharacter(localObject);
 
                 localObject.SetClientValues(this, msg);
@@ -695,49 +713,111 @@ namespace Mirage
                 if (logger.LogEnabled()) logger.Log("ClientScene.OnOwnerMessage - player=" + identity.Name);
             }
         }
+
+
+        /*
+        #if UNITY_EDITOR
+                private readonly Dictionary<int, NetworkIdentity> _validateCache = new Dictionary<int, NetworkIdentity>();
+
+                private void OnValidate()
+                {
+                    // clear before just incase it didn't clear last time
+                    _validateCache.Clear();
+
+                    ValidatePrefabs(spawnPrefabs);
+                    ValidatePrefabs(NetworkPrefabs?.Prefabs);
+
+                    // clear after so unity can release prefabs if it wants to
+                    _validateCache.Clear();
+                }
+
+                private void ValidatePrefabs(IEnumerable<NetworkIdentity> prefabs)
+                {
+                    if (prefabs == null)
+                        return;
+
+                    foreach (var prefab in prefabs)
+                    {
+                        if (prefab == null)
+                            continue;
+
+                        var hash = prefab.PrefabHash;
+                        if (_validateCache.TryGetValue(hash, out var existing))
+                        {
+                            if (prefab == existing)
+                                continue;
+
+                            var pathA = UnityEditor.AssetDatabase.GetAssetPath(prefab);
+                            var pathB = UnityEditor.AssetDatabase.GetAssetPath(existing);
+                            logger.Assert(prefab.PrefabHash == existing.PrefabHash);
+                            logger.LogError($"2 prefabs had the same hash:'{hash}', A:'{prefab.name}' B:'{existing.name}'. Path A:{pathA} Path B:{pathB}");
+                        }
+
+                        _validateCache[hash] = prefab;
+                    }
+                }
+        #endif
+        */
     }
 
     public class SpawnHandler
     {
-        public readonly PackedScene Prefab;
-
+        public readonly PackedScene Prefab; // Using PackedScene instead of NetworkIdentity
         public readonly SpawnHandlerDelegate Handler;
         public readonly SpawnHandlerAsyncDelegate HandlerAsync;
-
         public UnSpawnDelegate UnspawnHandler { get; private set; }
 
+        // Constructor for handling prefab-based spawns
         public SpawnHandler(PackedScene prefab)
         {
             Prefab = prefab ?? throw new ArgumentNullException(nameof(prefab));
         }
 
+        // Constructor for synchronous spawns using a handler
         public SpawnHandler(SpawnHandlerDelegate spawnHandler, UnSpawnDelegate unspawnHandler)
         {
             Handler = spawnHandler ?? throw new ArgumentNullException(nameof(spawnHandler));
-            // unspawn is allowed to be null
             UnspawnHandler = unspawnHandler;
         }
 
+        // Constructor for asynchronous spawns using a handler
         public SpawnHandler(SpawnHandlerAsyncDelegate spawnHandlerAsync, UnSpawnDelegate unspawnHandler)
         {
             HandlerAsync = spawnHandlerAsync ?? throw new ArgumentNullException(nameof(spawnHandlerAsync));
-            // unspawn is allowed to be null
             UnspawnHandler = unspawnHandler;
         }
 
+        // Constructor that combines prefab and sync handler
+        public SpawnHandler(PackedScene prefab, SpawnHandlerDelegate spawnHandler, UnSpawnDelegate unspawnHandler)
+        {
+            Prefab = prefab ?? throw new ArgumentNullException(nameof(prefab));
+            Handler = spawnHandler ?? throw new ArgumentNullException(nameof(spawnHandler));
+            UnspawnHandler = unspawnHandler;
+        }
+
+        // Constructor that combines prefab and async handler
+        public SpawnHandler(PackedScene prefab, SpawnHandlerAsyncDelegate spawnHandlerAsync, UnSpawnDelegate unspawnHandler)
+        {
+            Prefab = prefab ?? throw new ArgumentNullException(nameof(prefab));
+            HandlerAsync = spawnHandlerAsync ?? throw new ArgumentNullException(nameof(spawnHandlerAsync));
+            UnspawnHandler = unspawnHandler;
+        }
+
+        // Method to add unspawn handler if prefab exists
         public void AddUnspawnHandler(UnSpawnDelegate unspawnHandler)
         {
             if (Prefab == null)
             {
                 throw new InvalidOperationException("Can only add unspawn handler if prefab is already registered");
             }
-
             UnspawnHandler = unspawnHandler;
         }
 
+        // Check if the spawn handler is asynchronous
         public bool IsAsyncSpawn()
         {
             return HandlerAsync != null;
         }
     }
+
 }

@@ -4,15 +4,15 @@ using Mirage.Serialization;
 namespace Mirage.Authentication;
 public abstract partial class NetworkAuthenticator<T> : NetworkAuthenticator, INetworkAuthenticator
 {
-    private Action<NetworkPlayer, AuthenticationResult> _afterAuth;
+    private Action<INetworkPlayer, AuthenticationResult> _afterAuth;
 
-    internal sealed override void Setup(MessageHandler messageHandler, Action<NetworkPlayer, AuthenticationResult> afterAuth)
+    internal sealed override void Setup(MessageHandler messageHandler, Action<INetworkPlayer, AuthenticationResult> afterAuth)
     {
         messageHandler.RegisterHandler<T>(HandleAuth, allowUnauthenticated: true);
         _afterAuth = afterAuth;
     }
 
-    private async Task HandleAuth(NetworkPlayer player, T msg)
+    private async Task HandleAuth(INetworkPlayer player, T msg)
     {
         var result = await AuthenticateAsync(player, msg);
         _afterAuth.Invoke(player, result);
@@ -28,7 +28,7 @@ public abstract partial class NetworkAuthenticator<T> : NetworkAuthenticator, IN
     /// <param name="player">player that send message</param>
     /// <param name="message"></param>
     /// <returns></returns>
-    protected internal virtual Task<AuthenticationResult> AuthenticateAsync(NetworkPlayer player, T message)
+    protected internal virtual Task<AuthenticationResult> AuthenticateAsync(INetworkPlayer player, T message)
     {
         return Task.FromResult(Authenticate(player, message));
     }
@@ -42,7 +42,7 @@ public abstract partial class NetworkAuthenticator<T> : NetworkAuthenticator, IN
     /// </summary>
     /// <param name="message"></param>
     /// <returns></returns>
-    protected virtual AuthenticationResult Authenticate(NetworkPlayer player, T message) => throw new NotImplementedException("You must Implement Authenticate or AuthenticateAsync");
+    protected virtual AuthenticationResult Authenticate(INetworkPlayer player, T message) => throw new NotImplementedException("You must Implement Authenticate or AuthenticateAsync");
 
     /// <summary>
     /// Sends Authentication from client

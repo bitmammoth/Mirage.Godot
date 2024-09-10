@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Mirage.Logging;
 
 namespace Mirage.SocketLayer
@@ -20,10 +21,31 @@ namespace Mirage.SocketLayer
         {
             logger.Log(LogType.Warning, msg);
         }
+        /// <summary>
+        /// Assert only when DEBUG
+        /// </summary>
+        /// <param name="logger"></param>
+        /// <param name="condition"></param>
+        [Conditional("DEBUG")]
+        internal static void DebugAssert(this ILogger logger, bool condition)
+        {
+            if (!condition) logger.Log(LogType.Assert, "Failed Assertion");
+        }
+        /// <summary>
+        /// Assert only when DEBUG
+        /// </summary>
+        /// <param name="logger"></param>
+        /// <param name="condition"></param>
+        [Conditional("DEBUG")]
+        internal static void DebugAssert<T>(this ILogger logger, bool condition, T msg)
+        {
+            if (!condition) logger.Log(LogType.Assert, $"Failed Assertion: {msg}");
+        }
 
         internal static bool Enabled(this ILogger logger, LogType logType)
         {
             return logger != null && logger.IsLogTypeAllowed(logType);
         }
+
     }
 }

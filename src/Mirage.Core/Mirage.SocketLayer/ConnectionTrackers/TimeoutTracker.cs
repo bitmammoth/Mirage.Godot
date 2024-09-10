@@ -4,7 +4,7 @@ namespace Mirage.SocketLayer.ConnectionTrackers
 {
     internal class TimeoutTracker
     {
-        private float _lastRecvTime = float.MinValue;
+        private double _lastRecvTime = double.MinValue;
         private readonly Config _config;
         private readonly Time _time;
 

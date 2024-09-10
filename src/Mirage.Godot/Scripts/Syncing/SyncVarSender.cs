@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Mirage.Logging;
-using Mirage.Messages;
 using Mirage.Serialization;
 
 namespace Mirage
@@ -75,7 +74,7 @@ namespace Mirage
             {
                 // serialize all the dirty components and send
                 (var ownerWritten, var observersWritten) = identity.OnSerializeAll(false, ownerWriter, observersWriter);
-                if (ownerWritten || observersWritten)
+                if (ownerWritten > 0 || observersWritten > 0)
                 {
                     var varsMessage = new UpdateVarsMessage
                     {
@@ -87,17 +86,17 @@ namespace Mirage
                     // (only if there is a connection (e.g. if not a monster),
                     //  and if connection is ready because we use SendToReady
                     //  below too)
-                    if (ownerWritten)
+                    if (ownerWritten > 0)
                     {
                         SendToRemoteOwner(identity, ownerWriter, varsMessage);
                     }
 
                     // send observersWriter to everyone but owner
                     // (only if we serialized anything for observers)
-                    if (observersWritten)
+                    if (observersWritten > 0)
                     {
                         varsMessage.Payload = observersWriter.ToArraySegment();
-                        identity.Server.SendToObservers(identity, varsMessage, excludeLocalPlayer: true, excludeOwner: true);
+                        identity.SendToRemoteObservers(varsMessage, false);
                     }
 
                     // clear dirty bits only for the components that we serialized
@@ -115,7 +114,7 @@ namespace Mirage
 
         private static void SendToRemoteOwner(NetworkIdentity identity, PooledNetworkWriter ownerWriter, UpdateVarsMessage varsMessage)
         {
-            NetworkPlayer player;
+            INetworkPlayer player;
 
             if (identity.IsServer)
             {
@@ -131,7 +130,7 @@ namespace Mirage
                 throw new InvalidOperationException("Should be server or have auth if sending to OwnerWriter");
 
             // check player is ready
-            if (player != null)
+            if (player != null && player.SceneIsReady)
             {
                 varsMessage.Payload = ownerWriter.ToArraySegment();
                 player.Send(varsMessage);

@@ -1,5 +1,5 @@
+using System;
 using Mirage.Logging;
-using Mirage.Messages;
 using Mirage.Serialization;
 
 namespace Mirage
@@ -13,20 +13,38 @@ namespace Mirage
 
         private readonly IObjectLocator _objectLocator;
 
-        /// <summary>
-        /// skip messageHandler to not register UpdateVarsMessage
-        /// </summary>
-        /// <param name="objectLocator"></param>
-        /// <param name="messageHandler"></param>
-        public SyncVarReceiver(IObjectLocator objectLocator, MessageHandler messageHandler)
+        public SyncVarReceiver(NetworkClient client, IObjectLocator objectLocator)
         {
             _objectLocator = objectLocator;
-            if (messageHandler != null)
-                messageHandler.RegisterHandler<UpdateVarsMessage>(OnUpdateVarsMessage);
+            if (client.IsConnected)
+            {
+                AddHandlers(client);
+            }
+            else
+            {
+                // todo replace this with RunOnceEvent
+                client.Connected.AddListener(_ => AddHandlers(client));
+            }
+        }
+
+        private void AddHandlers(NetworkClient client)
+        {
+            // dont add if host player
+            // server should never sent to host
+            if (!client.IsHost)
+            {
+                client.MessageHandler.RegisterHandler<UpdateVarsMessage>(OnUpdateVarsMessage);
+            }
+        }
+
+        public SyncVarReceiver(NetworkServer server, IObjectLocator objectLocator)
+        {
+            _objectLocator = objectLocator;
+            server.MessageHandler.RegisterHandler<UpdateVarsMessage>(OnUpdateVarsMessage);
         }
 
 
-        private void OnUpdateVarsMessage(NetworkPlayer sender, UpdateVarsMessage msg)
+        private void OnUpdateVarsMessage(INetworkPlayer sender, UpdateVarsMessage msg)
         {
             if (logger.LogEnabled()) logger.Log("SyncVarReceiver.OnUpdateVarsMessage " + msg.NetId);
 
@@ -46,7 +64,7 @@ namespace Mirage
             }
         }
 
-        private bool ValidateReceive(NetworkPlayer sender, NetworkIdentity identity)
+        private bool ValidateReceive(INetworkPlayer sender, NetworkIdentity identity)
         {
             // only need to validate if we are server
             // client can always receive from server
@@ -68,16 +86,45 @@ namespace Mirage
                 // if we find atleast 1, then that is enough to start reading
                 // we check each component again when we read it
 
-                if (comp is INetworkNodeWithSettings withSettings)
-                {
-                    // we dont need to check From.Owner, if we are sending to server we must be sending from owner
-                    if ((withSettings.SyncSettings.To & SyncTo.Server) != 0)
-                        return true;
-                }
+                // we dont need to check From.Owner, if we are sending to server we must be sending from owner
+                if ((comp.SyncSettings.To & SyncTo.Server) != 0)
+                    return true;
             }
 
             if (logger.WarnEnabled()) logger.LogWarning($"UpdateVarsMessage for object without any NetworkBehaviours with SyncFrom.Owner [netId={identity.NetId}]");
             return false;
         }
     }
+    
+    [NetworkMessage]
+    public struct RemoveAuthorityMessage
+    {
+        public uint NetId;
+    }
+
+    [NetworkMessage]
+    public struct RemoveCharacterMessage
+    {
+        public bool KeepAuthority;
+    }
+
+    [NetworkMessage]
+    public struct ObjectDestroyMessage
+    {
+        public uint NetId;
+    }
+
+    [NetworkMessage]
+    public struct ObjectHideMessage
+    {
+        public uint NetId;
+    }
+
+    [NetworkMessage]
+    public struct UpdateVarsMessage
+    {
+        public uint NetId;
+        public ArraySegment<byte> Payload;
+    }
+
 }

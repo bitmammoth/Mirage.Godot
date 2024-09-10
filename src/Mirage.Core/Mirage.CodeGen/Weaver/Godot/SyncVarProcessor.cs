@@ -196,13 +196,15 @@ namespace Mirage.Weaver
             // if (!SyncVarEqual(value, ref playerData))
             var endOfMethod = worker.Create(OpCodes.Nop);
 
+            // this
+            worker.Append(worker.Create(OpCodes.Ldarg_0));
             // new value to set
             worker.Append(worker.Create(OpCodes.Ldarg, valueParam));
             // reference to field to set
             // make generic version of SetSyncVar with field type
             WriteLoadField(worker, syncVar);
 
-            var syncVarEqual = module.ImportReference(() => NetworkNodeExtensions.SyncVarEqual<object>(default, default));
+            var syncVarEqual = module.ImportReference<NetworkBehaviour>(nb => nb.SyncVarEqual<object>(default, default));
             var syncVarEqualGm = new GenericInstanceMethod(syncVarEqual.GetElementMethod());
             syncVarEqualGm.GenericArguments.Add(originalType);
             worker.Append(worker.Create(OpCodes.Call, syncVarEqualGm));
@@ -220,7 +222,7 @@ namespace Mirage.Weaver
             // this.SetDirtyBit(dirtyBit)
             worker.Append(worker.Create(OpCodes.Ldarg_0));
             worker.Append(worker.Create(OpCodes.Ldc_I8, syncVar.DirtyBit));
-            worker.Append(worker.Create(OpCodes.Call, () => NetworkNodeExtensions.SetDirtyBit(default, default)));
+            worker.Append(worker.Create<NetworkBehaviour>(OpCodes.Call, nb => nb.SetDirtyBit(default)));
 
             if (syncVar.HasHook)
             {
@@ -231,13 +233,13 @@ namespace Mirage.Weaver
                 // check if there is guard
                 worker.Append(worker.Create(OpCodes.Ldarg_0));
                 worker.Append(worker.Create(OpCodes.Ldc_I8, syncVar.DirtyBit));
-                worker.Append(worker.Create(OpCodes.Call, () => NetworkNodeExtensions.GetSyncVarHookGuard(default, default)));
+                worker.Append(worker.Create<NetworkBehaviour>(OpCodes.Call, nb => nb.GetSyncVarHookGuard(default)));
                 worker.Append(worker.Create(OpCodes.Brtrue, afterIf));
 
                 if (syncVar.InvokeHookOnOwner)
                 {
                     worker.Append(worker.Create(OpCodes.Ldarg_0));
-                    worker.Append(worker.Create(OpCodes.Call, (NetworkBehaviour nb) => nb.HasAuthority()));
+                    worker.Append(worker.Create(OpCodes.Call, (NetworkBehaviour nb) => nb.HasAuthority));
                     // if true, go to start of if
                     // this will act as an OR for the IsServer check
                     worker.Append(worker.Create(OpCodes.Brtrue, startIf));
@@ -246,9 +248,9 @@ namespace Mirage.Weaver
                 worker.Append(worker.Create(OpCodes.Ldarg_0));
                 if (syncVar.InvokeHookOnServer)
                     // if invokeOnServer, then `IsServer` will also cover the Host case too so we dont need to use an OR here
-                    worker.Append(worker.Create(OpCodes.Call, (NetworkBehaviour nb) => nb.IsServer()));
+                    worker.Append(worker.Create(OpCodes.Call, (NetworkBehaviour nb) => nb.IsServer));
                 else
-                    worker.Append(worker.Create(OpCodes.Call, (NetworkBehaviour nb) => nb.IsMainCharacter()));
+                    worker.Append(worker.Create(OpCodes.Call, (NetworkBehaviour nb) => nb.IsHost));
                 worker.Append(worker.Create(OpCodes.Brfalse, afterIf));
 
 
@@ -257,7 +259,8 @@ namespace Mirage.Weaver
                 worker.Append(worker.Create(OpCodes.Ldarg_0));
                 worker.Append(worker.Create(OpCodes.Ldc_I8, syncVar.DirtyBit));
                 worker.Append(worker.Create(OpCodes.Ldc_I4_1));
-                worker.Append(worker.Create(OpCodes.Call, () => NetworkNodeExtensions.SetSyncVarHookGuard(default, default, default)));
+                worker.Append(worker.Create<NetworkBehaviour>(OpCodes.Call,
+                    nb => nb.SetSyncVarHookGuard(default, default)));
 
                 // call hook (oldValue, newValue)
                 // Generates: OnValueChanged(oldValue, value)
@@ -267,7 +270,7 @@ namespace Mirage.Weaver
                 worker.Append(worker.Create(OpCodes.Ldarg_0));
                 worker.Append(worker.Create(OpCodes.Ldc_I8, syncVar.DirtyBit));
                 worker.Append(worker.Create(OpCodes.Ldc_I4_0));
-                worker.Append(worker.Create(OpCodes.Call, () => NetworkNodeExtensions.SetSyncVarHookGuard(default, default, default)));
+                worker.Append(worker.Create<NetworkBehaviour>(OpCodes.Call, nb => nb.SetSyncVarHookGuard(default, default)));
 
                 worker.Append(afterIf);
             }
@@ -674,18 +677,20 @@ namespace Mirage.Weaver
                 if (!syncVar.InvokeHookOnServer)
                 {
                     worker.Append(worker.Create(OpCodes.Ldarg_0));
-                    worker.Append(worker.Create(OpCodes.Call, () => NetworkNodeExtensions.IsServer(default)));
+                    worker.Append(worker.Create(OpCodes.Call, (NetworkBehaviour nb) => nb.IsServer));
                     // if true, go to start of if
                     // this will act as an OR for the IsServer check
                     worker.Append(worker.Create(OpCodes.Brtrue, endHookInvoke));
                 }
 
+                // 'this.' for 'this.SyncVarEqual'
+                worker.Append(worker.Create(OpCodes.Ldarg_0));
                 // 'oldValue'
                 worker.Append(worker.Create(OpCodes.Ldloc, oldValue));
                 // 'newValue'
                 WriteLoadField(worker, syncVar);
                 // call the function
-                var syncVarEqual = module.ImportReference(() => NetworkNodeExtensions.SyncVarEqual<object>(default, default));
+                var syncVarEqual = module.ImportReference<NetworkBehaviour>(nb => nb.SyncVarEqual<object>(default, default));
                 var syncVarEqualGm = new GenericInstanceMethod(syncVarEqual.GetElementMethod());
                 syncVarEqualGm.GenericArguments.Add(originalType);
                 worker.Append(worker.Create(OpCodes.Call, syncVarEqualGm));
