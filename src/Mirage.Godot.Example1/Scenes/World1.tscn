@@ -1,10 +1,11 @@
-[gd_scene load_steps=15 format=3 uid="uid://c6ligiar3siat"]
+[gd_scene load_steps=16 format=3 uid="uid://c6ligiar3siat"]
 
 [ext_resource type="PackedScene" uid="uid://nea4bwm2wwpj" path="res://Prefabs/Player.tscn" id="2_04pam"]
 [ext_resource type="PackedScene" uid="uid://miuh5bbud7ui" path="res://Prefabs/network_manager.tscn" id="2_die1l"]
 [ext_resource type="Script" path="res://Mirage.Godot/Components/CharacterSpawner.cs" id="2_pnjea"]
 [ext_resource type="Script" path="res://Mirage.Godot/NetworkScene.cs" id="3_cn7xa"]
 [ext_resource type="Script" path="res://Scripts/FollowTarget.cs" id="3_qofg0"]
+[ext_resource type="PackedScene" uid="uid://d3g3tl662iye2" path="res://Prefabs/Player2d.tscn" id="4_opcyr"]
 [ext_resource type="Script" path="res://Scripts/FollowLocalPlayer.cs" id="4_xs4pi"]
 [ext_resource type="Script" path="res://Mirage.Godot/NetworkHud.cs" id="5_6futy"]
 [ext_resource type="Script" path="res://Scripts/MobSpawner.cs" id="5_pft5t"]
@@ -38,6 +39,7 @@ point_count = 5
 NetworkScene = NodePath("NetworkScene")
 
 [node name="ClientObjectManager" parent="NetworkManager" index="3" node_paths=PackedStringArray("SpawnParent")]
+spawnPrefabs = Array[PackedScene]([ExtResource("2_04pam"), ExtResource("6_ro56k"), ExtResource("4_opcyr")])
 SpawnParent = NodePath("../..")
 
 [node name="CharacterSpawner" type="Node" parent="NetworkManager" node_paths=PackedStringArray("Server", "ServerObjectManager")]

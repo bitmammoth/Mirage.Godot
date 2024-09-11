@@ -1,0 +1,11 @@
+[gd_scene load_steps=3 format=3 uid="uid://d4mrfbs1b05ro"]
+
+[ext_resource type="Script" path="res://Scenes/TestSceneObject.cs" id="1_2fou0"]
+[ext_resource type="Script" path="res://Mirage.Godot/Objects/NetworkIdentity.cs" id="2_cxosm"]
+
+[node name="TestSceneObject" type="Node"]
+script = ExtResource("1_2fou0")
+
+[node name="NetworkIdentity" type="Node" parent="." node_paths=PackedStringArray("_root")]
+script = ExtResource("2_cxosm")
+_root = NodePath("..")

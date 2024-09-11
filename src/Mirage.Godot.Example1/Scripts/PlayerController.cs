@@ -1,3 +1,4 @@
+using System;
 using Godot;
 using Mirage;
 using Mirage.Logging;
@@ -7,7 +8,8 @@ namespace Example1
     public partial class PlayerController : NetworkBehaviour
     {
         private static readonly ILogger logger = LogFactory.GetLogger<NetworkTransform3D>();
-
+        [Export]
+        public Label TestLabel { get; set; }
         [Export]
         public int Speed { get; set; } = 14;
         [Export]
@@ -20,6 +22,45 @@ namespace Example1
         // used to check generic dictionary writer works
         private Godot.Collections.Dictionary<string, int> example_dictionary;
 
+        [SyncVar(hook = nameof(OnTestVarChanged))]
+        private int testVar;
+
+        private void OnTestVarChanged()
+        {
+            GD.Print("testVar changed to: " + testVar); 
+            TestLabel.Text = "testVar: " + testVar;
+        }
+
+        [ServerRpc(requireAuthority = false)]
+        private void TestServerRpc()
+        {
+            GD.Print("TestServerRpc called");
+        }
+
+        [ClientRpc(excludeOwner = true)]
+        private void TestClientRpcWithExcludeOwner()
+        {
+            GD.Print("TestClientRpc called");
+        }
+
+        public override void _Input(InputEvent @event)
+        {
+            base._Input(@event);
+            if (Identity.HasAuthority)
+            {
+                if (@event is InputEvent inputEvent)
+                {
+                    if (inputEvent.IsActionPressed("ui_accept"))
+                    {
+                        testVar++;
+                    }
+                    if (inputEvent.IsActionPressed("ui_cancel"))
+                    {
+                        testVar--;
+                    }
+                }
+            }
+        }
 
         private Vector3 _targetVelocity = Vector3.Zero;
         private CharacterBody3D _body;
@@ -27,6 +68,7 @@ namespace Example1
         public override void _Ready()
         {
             _body = GetParent<CharacterBody3D>();
+            TestLabel.Text = Identity.NetId.ToString();
         }
 
         public override void _PhysicsProcess(double delta)

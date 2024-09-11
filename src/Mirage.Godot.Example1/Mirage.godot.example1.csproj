@@ -1,22 +1,28 @@
 <Project Sdk="Godot.NET.Sdk/4.3.0">
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <EnableDynamicLoading>true</EnableDynamicLoading>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
     <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.11.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="4.11.0" />
     <PackageReference Include="Mono.Cecil" Version="0.11.4" />
     <ProjectReference Include="..\Mirage.Core\Mirage.Logging\Mirage.Logging.csproj" />
     <ProjectReference Include="..\Mirage.Core\Mirage.SocketLayer\Mirage.SocketLayer.csproj" />
+    <Reference Include="Modot">
+      <HintPath>D:\GITHUB\WORK\GODOT\Modot\bin\Debug\.net8\Modot.dll</HintPath>
+    </Reference>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.11.0" />
   </ItemGroup>
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="dotnet build $(ProjectDir)/../Mirage.Core/Mirage.CodeGen/Mirage.CodeGen.csproj -c Release" />
-    <Exec Command="$(ProjectDir)../Mirage.Core/Mirage.CodeGen/bin/Release/net6.0/Mirage.CodeGen.exe $(TargetPath) -force" />
+    <Exec Command="$(ProjectDir)../Mirage.Core/Mirage.CodeGen/bin/Release/net8.0/Mirage.CodeGen.exe $(TargetPath) -force" />
     <Error Condition="$(ExitCode) == 1" />
   </Target>
   <Target Name="PrePublish" BeforeTargets="Publish">
     <Exec Command="dotnet build $(ProjectDir)/../Mirage.Core/Mirage.CodeGen/Mirage.CodeGen.csproj -c Release" />
-    <Exec Command="$(ProjectDir)../Mirage.Core/Mirage.CodeGen/bin/Release/net6.0/Mirage.CodeGen.exe $(PublishDir)$(TargetFileName) $(TargetDir) -force" />
+    <Exec Command="$(ProjectDir)../Mirage.Core/Mirage.CodeGen/bin/Release/net8.0/Mirage.CodeGen.exe $(PublishDir)$(TargetFileName) $(TargetDir) -force" />
     <Error Condition="$(ExitCode) == 1" />
   </Target>
 </Project>

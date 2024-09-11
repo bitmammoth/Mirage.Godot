@@ -28,6 +28,9 @@ _socketFactory = NodePath("../../../NetworkManager/UdpSocketFactory")
 [node name="NetworkManager" parent="." node_paths=PackedStringArray("NetworkScene") instance=ExtResource("1_0pplq")]
 NetworkScene = NodePath("NetworkScene")
 
+[node name="ClientObjectManager" parent="NetworkManager" index="3" node_paths=PackedStringArray("SpawnParent")]
+SpawnParent = NodePath("../..")
+
 [node name="SyncPositionSystem" type="Node" parent="NetworkManager" node_paths=PackedStringArray("Client", "Server")]
 script = ExtResource("2_g7qd7")
 Client = NodePath("../NetworkClient")

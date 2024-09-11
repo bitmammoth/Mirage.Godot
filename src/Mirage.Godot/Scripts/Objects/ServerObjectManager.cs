@@ -258,7 +258,7 @@ namespace Mirage
         /// </summary>
         /// <param name="identity"></param>
         /// <param name="player"></param>
-        internal void ShowToPlayerMany(NetworkIdentity identity, List<INetworkPlayer> players)
+        /*internal void ShowToPlayerMany(NetworkIdentity identity, List<INetworkPlayer> players)
         {
             // make new list so that we can filter out SceneIsReady
             using var addedWrapper = AutoPool<List<INetworkPlayer>>.Take();
@@ -279,7 +279,7 @@ namespace Mirage
                 SendSpawnMessage(identity, sendTo[0]);
             else if (sendTo.Count > 1)
                 SendSpawnMessageMany(identity, sendTo);
-        }
+        }*/
 
         internal void HideToPlayer(NetworkIdentity identity, INetworkPlayer player)
         {
@@ -348,6 +348,9 @@ namespace Mirage
         /// <param name="owner">The connection that has authority over the object</param>
         public void Spawn(NetworkIdentity identity, int prefabHash, INetworkPlayer owner = null)
         {
+            // check first before setting prefab
+            ThrowIfPrefab(identity);
+
             identity.PrefabHash = prefabHash;
             Spawn(identity, owner);
         }
@@ -357,6 +360,9 @@ namespace Mirage
         /// </summary>
         public void Spawn(NetworkIdentity identity, INetworkPlayer owner)
         {
+            // check first before setting owner
+            ThrowIfPrefab(identity);
+
             identity.SetOwner(owner);
             Spawn(identity);
         }
@@ -395,26 +401,16 @@ namespace Mirage
 
         internal void SendSpawnMessage(NetworkIdentity identity, INetworkPlayer player)
         {
-            logger.Assert(player.IsAuthenticated || identity.Visibility is not AlwaysVisible,
+            logger.Assert(player.IsAuthenticated || !(identity.Visibility is AlwaysVisible), // can't use `is not` in unity2020
                 "SendSpawnMessage should only be called if player is authenticated, or there is custom visibility");
-            if (logger.LogEnabled()) logger.Log($"Server SendSpawnMessage: name={identity.Name} PrefabHash={identity.PrefabHash:X} SceneHash={identity.SceneHash:X} netId={identity.NetId}");
-
-            if (identity.PrefabHash == 0)
-                throw new SpawnObjectException($"{identity} had no PrefabHash. Without one it will be unable to spawn on client");
+            if (logger.LogEnabled()) logger.Log($"Server SendSpawnMessage: name={identity.Name} sceneId={identity.SceneId:X} netId={identity.NetId}");
 
             // one writer for owner, one for observers
             using (PooledNetworkWriter ownerWriter = NetworkWriterPool.GetWriter(), observersWriter = NetworkWriterPool.GetWriter())
             {
                 var isOwner = identity.Owner == player;
 
-                ArraySegment<byte> payload = default;
-                var hasPayload = CreateSpawnMessagePayload(identity, ownerWriter, observersWriter);
-                if (hasPayload)
-                {
-                    payload = isOwner
-                        ? ownerWriter.ToArraySegment()
-                        : observersWriter.ToArraySegment();
-                }
+                var payload = CreateSpawnMessagePayload(isOwner, identity, ownerWriter, observersWriter);
 
                 var prefabHash = identity.IsPrefab ? identity.PrefabHash : default(int?);
                 var sceneId = identity.IsSceneObject ? identity.SceneId : default(ulong?);
@@ -430,10 +426,12 @@ namespace Mirage
 
                 msg.SpawnValues = CreateSpawnValues(identity);
 
+
                 player.Send(msg);
             }
         }
-        internal void SendSpawnMessageMany(NetworkIdentity identity, List<INetworkPlayer> players)
+
+        /*internal void SendSpawnMessageMany(NetworkIdentity identity, List<INetworkPlayer> players)
         {
             if (logger.LogEnabled()) logger.Log($"Server SendSpawnMessage: name={identity.Name} sceneId={identity.SceneId:X} netId={identity.NetId}");
 
@@ -447,12 +445,14 @@ namespace Mirage
                 var sceneId = identity.IsSceneObject ? identity.SceneId : default(ulong?);
                 var msg = new SpawnMessage
                 {
+
                     NetId = identity.NetId,
                     SceneId = sceneId,
                     PrefabHash = prefabHash,
                     Payload = payload,
+                    SpawnValues = CreateSpawnValues(identity)
+
                 };
-                msg.SpawnValues = CreateSpawnValues(identity);
 
                 // we have to send local/Owner values as their own message.
                 // but observers can be sent using SendToMany to avoid copying bytes multiple times
@@ -487,7 +487,7 @@ namespace Mirage
                     msg.Payload = observersWriter.ToArraySegment();
                 NetworkServer.SendToMany(observerPlayers, msg);
             }
-        }
+        }*/
 
         private SpawnValues CreateSpawnValues(NetworkIdentity identity)
         {
@@ -544,23 +544,29 @@ namespace Mirage
             });
         }
 
-        private static bool CreateSpawnMessagePayload(NetworkIdentity identity, PooledNetworkWriter ownerWriter, PooledNetworkWriter observersWriter)
+        private static ArraySegment<byte> CreateSpawnMessagePayload(bool isOwner, NetworkIdentity identity, PooledNetworkWriter ownerWriter, PooledNetworkWriter observersWriter)
         {
             // Only call OnSerializeAllSafely if there are NetworkBehaviours
             if (identity.NetworkBehaviours.Length == 0)
             {
-                return false;
+                return default;
             }
 
             // serialize all components with initialState = true
             // (can be null if has none)
             identity.OnSerializeAll(true, ownerWriter, observersWriter);
 
-            return true;
+            // use owner segment if 'conn' owns this identity, otherwise
+            // use observers segment
+            var payload = isOwner ?
+                ownerWriter.ToArraySegment() :
+                observersWriter.ToArraySegment();
+
+            return payload;
         }
 
 
-        /*
+        
                 /// <summary>
                 /// Prefabs are not allowed to be spawned, they most be instantiated first
                 /// <para>This check does nothing in builds</para>
@@ -568,14 +574,12 @@ namespace Mirage
                 /// <exception cref="InvalidOperationException">Throws in the editor if object is part of a prefab</exception>
                 private static void ThrowIfPrefab(Object obj)
                 {
-        #if UNITY_EDITOR
-                    if (UnityEditor.PrefabUtility.IsPartOfPrefabAsset(obj))
+                    /*if (UnityEditor.PrefabUtility.IsPartOfPrefabAsset(obj))
                     {
                         throw new InvalidOperationException($"GameObject {obj.name} is a prefab, it can't be spawned.");
-                    }
-        #endif
+                    }*/
                 }
-        */
+        
 
         /// <summary>
         /// Destroys this object and corresponding objects on all clients.

@@ -133,7 +133,7 @@ namespace Mirage
 
         public NetworkSpawnSettings SpawnSettings = NetworkSpawnSettings.Default;
 
-/// <summary>
+        /// <summary>
         /// Returns true if running as a client and this object was spawned by a server.
         /// </summary>
         public bool IsClient => IsSpawned && Client != null && Client.Active;
@@ -364,8 +364,31 @@ namespace Mirage
             }
         }
 
-        [Export]
-        public int PrefabHash;
+        private int _prefabHash;
+
+        public int PrefabHash
+        {
+            get
+            {
+                // This is important because sometimes OnValidate does not run (like when adding view to prefab with no child links)
+                // also check for hash that is empty string, if it is, reset its ID to its real path
+                if (_prefabHash == 0 || _prefabHash == StringHash.EmptyString)
+                    NetworkIdentityIdGenerator.SetupIDs(this);
+                return _prefabHash;
+            }
+            set
+            {
+                if (value == 0)
+                {
+                    throw new ArgumentException($"Cannot set PrefabHash to 0 on '{Name}'. Old PrefabHash '{_prefabHash}'.");
+                }
+
+                var old = _prefabHash;
+                _prefabHash = value;
+
+                if (logger.LogEnabled()) logger.Log($"Setting PrefabHash on '{Name}' to '{value}', Old PrefabHash:{old}");
+            }
+        }
 
         private AddLateEvent _onStartServer = new AddLateEvent();
         private AddLateEvent _onStartClient = new AddLateEvent();
@@ -965,10 +988,7 @@ namespace Mirage
         // add all newObservers that aren't in .observers yet
         private bool AddNewObservers(bool initialize)
         {
-            using var addedWrapper = AutoPool<List<INetworkPlayer>>.Take();
-            var added = addedWrapper.Item;
-            Debug.Assert(added.Count == 0);
-
+            var changed = false;
             foreach (var player in newObservers)
             {
                 // only add ready connections.
@@ -978,15 +998,13 @@ namespace Mirage
                     // new observer
                     player.AddToVisList(this);
                     // spawn identity for this conn
-                    added.Add(player);
+                    ServerObjectManager.ShowToPlayer(this, player);
                     if (logger.LogEnabled()) logger.Log($"Added new observer '{player}' for {Name}");
+                    changed = true;
                 }
             }
 
-            if (added.Count > 0)
-                ServerObjectManager.ShowToPlayerMany(this, added);
-
-            return added.Count > 0;
+            return changed;
         }
 
 

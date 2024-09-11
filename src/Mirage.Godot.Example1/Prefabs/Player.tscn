@@ -26,7 +26,17 @@ _root = NodePath("..")
 script = ExtResource("4_stx5o")
 _target = NodePath("..")
 
-[node name="PlayerController" type="Node" parent="."]
+[node name="PlayerController" type="Node" parent="." node_paths=PackedStringArray("TestLabel")]
 script = ExtResource("4_lirth")
+TestLabel = NodePath("../Label")
 From = 1
 To = 6
+
+[node name="Label" type="Label" parent="."]
+anchors_preset = -1
+anchor_right = 0.476
+anchor_bottom = 0.599
+offset_left = 478.0
+offset_top = 354.0
+offset_right = -18.352
+offset_bottom = -0.152039

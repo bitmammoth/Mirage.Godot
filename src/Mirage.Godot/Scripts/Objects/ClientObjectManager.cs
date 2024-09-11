@@ -26,7 +26,8 @@ namespace Mirage
         /// <para>For each of these prefabs, ClientManager.RegisterPrefab() will be automatically invoke.</para>
         /// </summary>
         //[Header("Prefabs")]
-        public List<PackedScene> spawnPrefabs = new List<PackedScene>();
+        [Export] public PackedScene[] spawnPrefabs;
+        //public List<PackedScene> spawnPrefabs = new List<PackedScene>();
 
         /// <summary>
         /// A scriptable object that holds all the prefabs that will be registered with the spawning system.
@@ -64,7 +65,7 @@ namespace Mirage
 
             _client = client;
             _client.Disconnected.AddListener(OnClientDisconnected);
-
+           // GD.Print("Registering prefabs" + spawnPrefabs.Count + " " + NetworkPrefabs?.Prefabs.Count);
             RegisterPrefabs(spawnPrefabs, true);
             RegisterPrefabs(NetworkPrefabs?.Prefabs, true);
 
@@ -488,12 +489,12 @@ namespace Mirage
 
             // was the object already spawned?
             var existing = _client.World.TryGetIdentity(msg.NetId, out var identity);
-
             if (!existing)
             {
                 //is the object on the prefab or scene object lists?
                 if (msg.SceneId.HasValue)
                 {
+                    GD.Print("SceneId: " + msg.SceneId);
                     identity = SpawnSceneObject(msg);
                 }
                 else if (msg.PrefabHash.HasValue)
@@ -511,7 +512,6 @@ namespace Mirage
                 }
                 // no else here, should never get here because of check at start of method
             }
-
             AfterSpawn(msg, existing, identity);
         }
 
