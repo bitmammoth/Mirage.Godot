@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using Godot;
-
+#if GODOT_EDITOR
 namespace Mirage
 {
     internal static class NetworkIdentityIdGenerator
@@ -155,7 +155,7 @@ namespace Mirage
                     if (SceneId == value)
                         return;
 
-                    //_identity.SceneId = (_identity.SceneId & HASH_MASK) | ((ulong)value & ID_MASK);
+                    _identity.Editor_SceneId = (_identity.SceneId & HASH_MASK) | ((ulong)value & ID_MASK);
                 }
             }
 
@@ -167,7 +167,7 @@ namespace Mirage
                     if (SceneHash == value)
                         return;
 
-                    //_identity.SceneId = (((ulong)value) << 32) | (_identity.SceneId & ID_MASK);
+                    _identity.Editor_SceneId = (((ulong)value) << 32) | (_identity.SceneId & ID_MASK);
                 }
             }
 
@@ -179,3 +179,4 @@ namespace Mirage
         }
     }
 }
+#endif
